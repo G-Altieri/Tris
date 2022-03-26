@@ -45,7 +45,7 @@
         >
           RESET
         </button>
-        <button
+        <NuxtLink
           class="
             bg-white
             hover:bg-gray-100
@@ -58,10 +58,10 @@
             shadow
             mx-6
           "
-          @click="resetTris()"
+        to="/"
         >
           HOME
-        </button>
+        </NuxtLink>
       </div>
     </div>
     <!-- Tris Game -->
@@ -530,7 +530,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .square {
   position: relative;
   width: 90%;
@@ -576,15 +576,17 @@ export default {
 
 
 .animO{
-    animation: hideshow 1s ease ;
+    animation: hideshow 0.5s ease-in-out ;
  /*stroke-dasharray: 227;
   stroke-dashoffset: 0;*/
 }
 .animX{
-    animation: hideshow 1s ease ;
+    animation: hideshow 0.5s ease-in-out ;
 
 }
-
+.bgTris{
+  background-color: #050401;
+}
 @keyframes hideshow {
   0% { opacity: 0;
    transform: scale(0);
