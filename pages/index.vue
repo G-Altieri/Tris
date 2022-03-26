@@ -1,5 +1,5 @@
 <template>
-<div class="min-h-screen bg-gray-700">
+<div class="min-h-screen bgTris">
   <Tris/>
 
 </div>
@@ -10,3 +10,9 @@ export default {
   name: 'IndexPage'
 }
 </script>
+
+<style>
+.bgTris{
+  background-color: #050401;
+}
+</style>

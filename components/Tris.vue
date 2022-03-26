@@ -1,6 +1,71 @@
 <template>
   <div class="container mx-auto px-4 h-screen flex items-center justify-center">
-    <div class="square" style="">
+    <!-- Info Winner -->
+    <div
+      class="
+        absolute
+        h-screen
+        z-50
+        w-screen
+        flex flex-col flex-nowrap
+        justify-center
+        items-stretch
+      "
+      v-show="isGameEnd"
+    >
+      <div
+        class="
+          text-6xl
+          md:text-7xl
+          lg:text-9xl
+          textVictory
+          flex
+          items-center
+          justify-center
+          bgVictory
+        "
+      >
+        {{ gameWinner }}
+      </div>
+      <!-- Button Reset -->
+      <div class="flex items-center justify-center pt-6 bgVictory pb-3">
+        <button
+          class="
+            bg-white
+            hover:bg-gray-100
+            text-gray-800
+            font-semibold
+            py-2
+            px-4
+            border border-gray-400
+            rounded
+            shadow
+          "
+          @click="resetTris()"
+        >
+          RESET
+        </button>
+        <button
+          class="
+            bg-white
+            hover:bg-gray-100
+            text-gray-800
+            font-semibold
+            py-2
+            px-4
+            border border-gray-400
+            rounded
+            shadow
+            mx-6
+          "
+          @click="resetTris()"
+        >
+          HOME
+        </button>
+      </div>
+    </div>
+    <!-- Tris Game -->
+    <div class="square" :class="{ blur: isGameEnd }" style="">
       <!-- Content Square -->
       <div class="contentSquare grid grid-cols-3">
         <!-- Square playing Tris -->
@@ -9,13 +74,13 @@
             <img
               src="~/assets/img/x.svg"
               width="80%"
-              class="absolute"
+              class="absolute animX"
               v-if="render_tris[i] == 5"
             />
             <img
               src="~/assets/img/o.svg"
               width="80%"
-              class="absolute"
+              class="absolute animO"
               v-if="render_tris[i] == 3"
             />
           </div>
@@ -32,6 +97,9 @@ export default {
     return {
       player: false,
       robot: true,
+      isFull: false,
+      isGameEnd: false,
+      gameWinner: "",
       classSquareTris: {
         1: "square1 border-t-8 border-l-8 rounded-l-xl",
         2: "square1 border-t-8 border-l-8",
@@ -75,63 +143,216 @@ export default {
   },
   methods: {
     clicked(x) {
-      //Prendo la posizione del click
-      var i = this.tris[x].charAt(0);
-      var j = this.tris[x].charAt(1);
-      //Controllo che gia non è stato gia premuto
-      if (this.data_tris[i][j] == 1) {
-        //Controllo se gioca il pc o un umano
-        if (!this.robot) {
-          //Controllo a che giocatore tocca
-          if (this.player) {
-            //Metto O
-            this.data_tris[i][j] = 3;
-            this.render_tris[x] = 3;
+      //Controllo se il gioco e finito
+      if (!this.isGameEnd) {
+        //Prendo la posizione del click
+        var i = this.tris[x].charAt(0);
+        var j = this.tris[x].charAt(1);
+        //Controllo che gia non è stato gia premuto
+        if (this.data_tris[i][j] == 1) {
+          //Controllo se gioca il pc o un umano
+          if (!this.robot) {
+            //Controllo a che giocatore tocca
+            if (this.player) {
+              //Metto O
+              this.selectCasella(x, 3);
+            } else {
+              //Metto X
+              this.selectCasella(x, 5);
+            }
+            //Change player
+            this.player = !this.player;
+            //Controll winner
+            this.controll();
           } else {
+            //Controllo a che giocatore tocca
+
             //Metto X
-            this.data_tris[i][j] = 5;
-            this.render_tris[x] = 5;
+            this.selectCasella(x, 5);
+            //Controll winner
+            this.controll();
+            if (!this.isGameEnd) {
+              //Mette O
+              this.playRobot(x);
+            }
+            //Controll winner
+            this.controll();
           }
-          //Change player
-          this.player = !this.player;
-          //Controll winner
-          this.controll();
-        } else {
-          //Controllo a che giocatore tocca
-          if (this.player) {
-          } else {
-            //Metto X
-            this.data_tris[i][j] = 5;
-            this.render_tris[x] = 5;
-            //Mette O
-            this.playRobot(x);
-          }
-          //Controll winner
-          this.controll();
         }
       }
     },
     //Method for AI Robot
-    playRobot(x) {
+    playRobot() {
       console.log("Gioca il robot");
 
-      //Play Rows 
-      for (var i = 0; i < 3; i++) {
-        var calcRiga = 1;
-        for (var j = 0; j < 3; j++) {
-          calcRiga = this.data_tris[i][j] * calcRiga;
-        }
-        if (calcRiga == 25) {
+      var random = true;
+      var isValuePut = true;
+
+      //MOSSE VINCENTI
+      //Play Rows
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcRiga = 1;
           for (var j = 0; j < 3; j++) {
-            if (this.data_tris[i][j] == 1) {
-              this.data_tris[i][j] = 3;
-              this.render_tris[this.getPositionTrisMap(i, j)] = 3;
+            calcRiga = this.data_tris[i][j] * calcRiga;
+          }
+          if (calcRiga == 9) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[i][j] == 1) {
+                this.selectCasella(this.getPositionTrisMap(i, j), 3);
+                isValuePut = false;
+              }
             }
           }
         }
       }
 
       //Play Columns
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcColum = 1;
+          for (var j = 0; j < 3; j++) {
+            calcColum = this.data_tris[j][i] * calcColum;
+          }
+          if (calcColum == 9) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[j][i] == 1) {
+                this.selectCasella(this.getPositionTrisMap(j, i), 3);
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Sinistra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
+        if (calcDiagonalSx == 9) {
+          for (var j = 0; j < 3; j++) {
+            if (this.data_tris[j][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(j, j), 3);
+              isValuePut = false;
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Destra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
+        if (calcDiagonalSx == 9) {
+          var i = 0;
+          var j = 2;
+          for (var k = 0; k < 3; k++) {
+            if (this.data_tris[i][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(i, j), 3);
+              isValuePut = false;
+            }
+            i += 1;
+            j -= 1;
+          }
+        }
+      }
+
+      //MOSSE BLOCANTI
+      //Play Rows
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcRiga = 1;
+          for (var j = 0; j < 3; j++) {
+            calcRiga = this.data_tris[i][j] * calcRiga;
+          }
+          if (calcRiga == 25) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[i][j] == 1) {
+                this.selectCasella(this.getPositionTrisMap(i, j), 3);
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+      //Play Columns
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcColum = 1;
+          for (var j = 0; j < 3; j++) {
+            calcColum = this.data_tris[j][i] * calcColum;
+          }
+          if (calcColum == 25) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[j][i] == 1) {
+                this.selectCasella(this.getPositionTrisMap(j, i), 3);
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Sinistra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
+        if (calcDiagonalSx == 25) {
+          for (var j = 0; j < 3; j++) {
+            if (this.data_tris[j][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(j, j), 3);
+              isValuePut = false;
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Destra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
+        if (calcDiagonalSx == 25) {
+          var i = 0;
+          var j = 2;
+          for (var k = 0; k < 3; k++) {
+            if (this.data_tris[i][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(i, j), 3);
+              isValuePut = false;
+            }
+            i += 1;
+            j -= 1;
+          }
+        }
+      }
+
+      //TEST IMPOSSIBLE Victory
+      //Play Diagonal Destra
+      if (isValuePut) {
+        console.log(this.data_tris[1][1] == 1);
+        if (this.data_tris[1][1] == 1)
+          if (
+            this.data_tris[0][0] == 5 ||
+            this.data_tris[0][2] == 5 ||
+            this.data_tris[2][0] == 5 ||
+            this.data_tris[2][2] == 5
+          ) {
+            console.log("XXX");
+            this.selectCasella(this.getPositionTrisMap(1, 1), 3);
+            isValuePut = false;
+          }
+      }
+
+      //Position Random
+      if (isValuePut && !this.isFull) {
+        while (random) {
+          var numRandom = Math.floor(Math.random() * 10);
+          if (this.render_tris[numRandom] == 1) {
+            this.selectCasella(numRandom, 3);
+            random = false;
+            isValuePut = false;
+          }
+        }
+      }
     },
     //Method for controll winner
     controll() {
@@ -142,10 +363,10 @@ export default {
           addRig = this.data_tris[i][j] * addRig;
         }
         if (addRig == 27) {
-          console.log("Winner O");
+          this.gameWinner = "Winner O";
         }
         if (addRig == 125) {
-          console.log("Winner X");
+          this.gameWinner = "Winner X";
         }
       }
       //Controllo Colonne
@@ -155,10 +376,10 @@ export default {
           addCol = this.data_tris[j][i] * addCol;
         }
         if (addCol == 27) {
-          console.log("Winner O");
+          this.gameWinner = "Winner O";
         }
         if (addCol == 125) {
-          console.log("Winner X");
+          this.gameWinner = "Winner X";
         }
       }
       //Controllo Diagonale Sinistra
@@ -166,22 +387,33 @@ export default {
       for (var i = 0; i < 3; i++) {
         addDig1 = this.data_tris[i][i] * addDig1;
         if (addDig1 == 27) {
-          console.log("Winner O");
+          this.gameWinner = "Winner O";
         }
         if (addDig1 == 125) {
-          console.log("Winner X");
+          this.gameWinner = "Winner X";
         }
       }
       //Controllo Diagonale Destra
       var addDig2 =
         this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
       if (addDig2 == 27) {
-        console.log("Winner O");
+        this.gameWinner = "Winner O";
       }
       if (addDig2 == 125) {
-        console.log("Winner X");
+        this.gameWinner = "Winner X";
       }
+
+      if (this.gameWinner == "") {
+        if (this.isFull) {
+          this.gameWinner = "Parity";
+          this.isGameEnd = true;
+        }
+      } else {
+        this.isGameEnd = true;
+      }
+      console.log(this.gameWinner);
     },
+    //Position Numeber da i, j
     getPositionTrisMap(i, j) {
       switch (i) {
         case 0:
@@ -213,6 +445,84 @@ export default {
           }
       }
     },
+    //Select
+    selectCasella(x, valueGame) {
+      var i, j;
+      switch (x) {
+        case 1:
+          i = 0;
+          j = 0;
+          break;
+        case 2:
+          i = 0;
+          j = 1;
+          break;
+        case 3:
+          i = 0;
+          j = 2;
+          break;
+        case 4:
+          i = 1;
+          j = 0;
+          break;
+        case 5:
+          i = 1;
+          j = 1;
+          break;
+        case 6:
+          i = 1;
+          j = 2;
+          break;
+        case 7:
+          i = 2;
+          j = 0;
+          break;
+        case 8:
+          i = 2;
+          j = 1;
+          break;
+        case 9:
+          i = 2;
+          j = 2;
+          break;
+      }
+
+      this.data_tris[i][j] = valueGame;
+      this.render_tris[x] = valueGame;
+
+      //Controll is Full
+      var find = false;
+      for (var i = 0; i < 3 && !find; i++) {
+        for (var j = 0; j < 3 && !find; j++) {
+          if (this.data_tris[i][j] == 1) {
+            find = true;
+          }
+        }
+      }
+      if (find) this.isFull = false;
+      else this.isFull = true;
+    },
+    resetTris() {
+      this.data_tris = [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ];
+      this.render_tris = {
+        1: 1,
+        2: 1,
+        3: 1,
+        4: 1,
+        5: 1,
+        6: 1,
+        7: 1,
+        8: 1,
+        9: 1,
+      };
+      this.isFull = false;
+      this.isGameEnd = false;
+      this.gameWinner = "";
+    },
   },
   mounted() {},
   components: {},
@@ -240,8 +550,8 @@ export default {
   height: 100%;
 }
 .square1 {
-  border-color: rgb(0, 0, 0);
-  background-color: rgb(107, 47, 102);
+  border-color: #050401;
+  background-color: #540D6E;
   height: 100%;
   box-sizing: content-box;
   display: flex;
@@ -251,7 +561,41 @@ export default {
   position: relative;
 }
 .square1:hover {
-  background-color: yellow;
+  background-color: #FFD23F;
 }
+.blur {
+  filter: blur(13px);
+  -webkit-filter: blur(13px);
+}
+.bgVictory{
+  background-color: rgba(17, 75, 95,0.75);
+}
+.textVictory{
+  color: #F42272;
+}
+
+
+.animO{
+    animation: hideshow 1s ease ;
+ /*stroke-dasharray: 227;
+  stroke-dashoffset: 0;*/
+}
+.animX{
+    animation: hideshow 1s ease ;
+
+}
+
+@keyframes hideshow {
+  0% { opacity: 0;
+   transform: scale(0);
+  }
+  50%{
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% { opacity: 1;
+  transform: scale(1); }
+} 
+
 </style>
 
