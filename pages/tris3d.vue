@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { Interaction } from "three.interaction/src/index.js";
+import  {RoundedBoxGeometry}  from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 export default {
   name: "tris3D",
@@ -137,7 +138,7 @@ export default {
 
       function init() {
         //Camera
-        /* camera = new THREE.PerspectiveCamera(
+        /*  camera = new THREE.PerspectiveCamera(
           70,
           window.innerWidth / window.innerHeight,
           1,
@@ -156,16 +157,49 @@ export default {
 
         //Light
         const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 1, 1).normalize();
+        light.position.set(1, 5, 1).normalize();
+        const lightHelper1 = new THREE.PointLightHelper(light);
         scene.add(light);
 
+        const pointLight2 = new THREE.PointLight(0xffffff);
+        const lightHelper2 = new THREE.PointLightHelper(pointLight2);
+        pointLight2.position.set(-1, -10, 1).normalize();
+        pointLight2.intensity = 0.3;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff);
+        ambientLight.intensity = 0.5;
+        const ambientHelper = new THREE.PointLightHelper(ambientLight);
+
+        scene.add(pointLight2,ambientLight);
         //Helper
         const gridHelper = new THREE.GridHelper(200, 50);
-        //scene.add(gridHelper);
+        // scene.add(lightHelper1, lightHelper2);
+        //  scene.add(gridHelper);
 
+        //Plane Separe
+        //const separe = new THREE.BoxGeometry(3, 0.1, 0.05);
+        const separe = new RoundedBoxGeometry( 3, 0.15, 0.05, 8, 1 );
+        const materialSepare = new THREE.MeshLambertMaterial({
+          color: 0x0000ff,
+        });
+        const altSepare = 0.07;
+        const separe1 = new THREE.Mesh(separe, materialSepare);
+        separe1.position.y = altSepare;
+        separe1.position.z = 0.5;
+        const separe2 = new THREE.Mesh(separe, materialSepare);
+        separe2.position.y = altSepare;
+        separe2.position.z = -0.5;
+        const separe3 = new THREE.Mesh(separe, materialSepare);
+        separe3.position.y = altSepare;
+        separe3.position.x = 0.5;
+        separe3.rotation.y = Math.PI / 2;
+        const separe4 = new THREE.Mesh(separe, materialSepare);
+        separe4.position.y = altSepare;
+        separe4.position.x = -0.5;
+        separe4.rotation.y = Math.PI / 2;
+        scene.add(separe1, separe2, separe3,separe4);
         //Plane
         const geometryCube = new THREE.BoxGeometry(1, 0.1, 1);
-
         const materialOne = new THREE.MeshLambertMaterial({
           color: 0xffffff,
         });
@@ -173,8 +207,8 @@ export default {
           color: 0xff0ff4c6,
         });
         let k = 0;
-        for (let i = 0; i < 3; i++) {
-          for (let j = 0; j < 3; j++) {
+        for (let i = -1; i < 2; i++) {
+          for (let j = -1; j < 2; j++) {
             const materialRandom = new THREE.MeshLambertMaterial({
               color: Math.random() * 0xffffff,
             });
@@ -188,7 +222,7 @@ export default {
             object.on("click", function (ev) {
               console.log(ev);
               console.log("Click obg " + ev.data.target.name);
-              position(ev.data.target.name);
+              placeObj(ev.data.target.name);
             });
 
             scene.add(object);
@@ -205,7 +239,7 @@ export default {
           console.log(objIntersected);
           console.log("Click 1");
         });*/
-        
+
         //Camera Position
         camera.position.z = 0;
         camera.position.x = 0;
@@ -256,7 +290,7 @@ export default {
       }
 
       //Method for place X or O
-      function position(k) {
+      function placeObj(k) {
         const geometryCube = new THREE.CylinderGeometry(0.5, 1, 2, 32);
         const materialRandom = new THREE.MeshLambertMaterial({
           color: Math.random() * 0xffffff,
@@ -272,29 +306,33 @@ export default {
         object.position.x = position[0];
         object.position.z = position[1];
         scene.add(object);
+
+        var viewPos = camera.position;
+        console.log("Position Camera ");
+        console.log(viewPos);
       }
 
       //Method Usufull for game logic
       function findPosition(k) {
         switch (k) {
           case 1:
-            return [0, 0];
+            return [-1, -1];
           case 2:
-            return [1, 0];
+            return [0, -1];
           case 3:
-            return [2, 0];
+            return [1, -1];
           case 4:
-            return [0, 1];
+            return [-1, 0];
           case 5:
-            return [1, 1];
+            return [0, 0];
           case 6:
-            return [2, 1];
+            return [1, 0];
           case 7:
-            return [0, 2];
+            return [-1, 1];
           case 8:
-            return [1, 2];
+            return [0, 1];
           case 9:
-            return [2, 2];
+            return [1, 1];
         }
       }
 
