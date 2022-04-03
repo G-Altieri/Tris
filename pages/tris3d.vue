@@ -7,12 +7,29 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { Interaction } from "three.interaction/src/index.js";
-import  {RoundedBoxGeometry}  from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 export default {
   name: "tris3D",
   data() {
-    return {};
+    return {
+      data_tris: [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ],
+      map_tris: {
+        1: "00",
+        2: "01",
+        3: "02",
+        4: "10",
+        5: "11",
+        6: "12",
+        7: "20",
+        8: "21",
+        9: "22",
+      },
+    };
   },
   mounted() {
     this.init2();
@@ -129,10 +146,14 @@ export default {
       let INTERSECTED;
       var objIntersected = [];
 
+      //var logic game
+      let turn = true;
+
       //Pointer for mouse movement
       const pointer = new THREE.Vector2();
       const radius = 100;
-
+      var data_tris = this.data_tris;
+      var map_tris = this.map_tris;
       init(); //Start
       animate(); //Refresh
 
@@ -170,7 +191,7 @@ export default {
         ambientLight.intensity = 0.5;
         const ambientHelper = new THREE.PointLightHelper(ambientLight);
 
-        scene.add(pointLight2,ambientLight);
+        scene.add(pointLight2, ambientLight);
         //Helper
         const gridHelper = new THREE.GridHelper(200, 50);
         // scene.add(lightHelper1, lightHelper2);
@@ -178,7 +199,7 @@ export default {
 
         //Plane Separe
         //const separe = new THREE.BoxGeometry(3, 0.1, 0.05);
-        const separe = new RoundedBoxGeometry( 3, 0.15, 0.05, 8, 1 );
+        const separe = new RoundedBoxGeometry(3, 0.15, 0.05, 8, 1);
         const materialSepare = new THREE.MeshLambertMaterial({
           color: 0x0000ff,
         });
@@ -197,7 +218,7 @@ export default {
         separe4.position.y = altSepare;
         separe4.position.x = -0.5;
         separe4.rotation.y = Math.PI / 2;
-        scene.add(separe1, separe2, separe3,separe4);
+        scene.add(separe1, separe2, separe3, separe4);
         //Plane
         const geometryCube = new THREE.BoxGeometry(1, 0.1, 1);
         const materialOne = new THREE.MeshLambertMaterial({
@@ -220,7 +241,6 @@ export default {
             object.cursor = "pointer";
             object.name = k;
             object.on("click", function (ev) {
-              console.log(ev);
               console.log("Click obg " + ev.data.target.name);
               placeObj(ev.data.target.name);
             });
@@ -229,16 +249,6 @@ export default {
             objIntersected.push(object);
           }
         }
-
-        /* const cube1 = new THREE.Mesh(geometryCube, materialTwo);
-        cube1.position.x = -1;
-        scene.add(cube1);
-        objIntersected.push(cube1);
-         cube1.cursor = "pointer";
-        cube1.on("click", function (ev) {
-          console.log(objIntersected);
-          console.log("Click 1");
-        });*/
 
         //Camera Position
         camera.position.z = 0;
@@ -291,27 +301,87 @@ export default {
 
       //Method for place X or O
       function placeObj(k) {
-        const geometryCube = new THREE.CylinderGeometry(0.5, 1, 2, 32);
-        const materialRandom = new THREE.MeshLambertMaterial({
-          color: Math.random() * 0xffffff,
-        });
-        const object = new THREE.Mesh(geometryCube, materialRandom);
-        object.scale.x = 0.1;
-        object.scale.z = 0.1;
-        object.scale.y = 0.1;
-        console.log("k " + k);
         var position = findPosition(k);
-        console.log("Position " + position);
-        object.position.y = 0.2;
-        object.position.x = position[0];
-        object.position.z = position[1];
-        scene.add(object);
+        //Control is empty 
+        if (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] == 1){
+          if (turn) {
+            var obg = createX();
+            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3;
+          } else {
+            var obg = createO();
+            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5;
+          }
+        turn = !turn; //change turn
+        //Position obg
+        obg.position.y = 0.2;
+        obg.position.x = position[0];
+        obg.position.z = position[1];
 
-        var viewPos = camera.position;
-        console.log("Position Camera ");
-        console.log(viewPos);
+        scene.add(obg);
+        }
       }
 
+      //Object X
+      function createX() {
+        var altX = 0;
+        const geometryX = new THREE.BoxGeometry(0.7, 0.15, 0.08);
+        const materialX = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const obj_X_one = new THREE.Mesh(geometryX, materialX);
+        obj_X_one.position.y = altX;
+        obj_X_one.position.x = 0;
+        obj_X_one.rotation.y = Math.PI / 2 / 2;
+        const obj_X_two = new THREE.Mesh(geometryX, materialX);
+        obj_X_two.position.y = altX;
+        obj_X_two.position.x = 0;
+        obj_X_two.rotation.y = -(Math.PI / 2) / 2;
+        const groupX = new THREE.Group();
+        groupX.add(obj_X_one);
+        groupX.add(obj_X_two);
+        return groupX;
+      }
+      //Object O
+      function createO() {
+        var altO = 1;
+        const materialO = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        var outerRadius = 0.3;
+        var innerRadius = 0.2;
+        var height = 0.05;
+
+        var arcShape = new THREE.Shape();
+        arcShape.moveTo(outerRadius * 2, outerRadius);
+        arcShape.absarc(
+          outerRadius,
+          outerRadius,
+          outerRadius,
+          0,
+          Math.PI * 2,
+          false
+        );
+        var holePath = new THREE.Path();
+        holePath.moveTo(outerRadius + innerRadius, outerRadius);
+        holePath.absarc(
+          outerRadius,
+          outerRadius,
+          innerRadius,
+          0,
+          Math.PI * 2,
+          true
+        );
+        arcShape.holes.push(holePath);
+
+        var geometryO = new THREE.ExtrudeGeometry(arcShape, {
+          amount: height,
+          bevelEnabled: false,
+          steps: 1,
+          curveSegments: 60,
+        });
+        geometryO.center();
+        geometryO.rotateX(Math.PI * -0.5);
+        var objO = new THREE.Mesh(geometryO, materialO);
+        objO.position.y = altO;
+
+        return objO;
+      }
       //Method Usufull for game logic
       function findPosition(k) {
         switch (k) {
