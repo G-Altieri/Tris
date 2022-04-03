@@ -1,5 +1,12 @@
 <template>
-  <div></div>
+  <div>
+    <div
+      class="absolute text-center mx-auto"
+      style="color: white; left: 50%; transform: translate(-50%, 0)"
+    >
+      {{ gameWinner }}
+    </div>
+  </div>
 </template>
 
 <script>
@@ -13,6 +20,11 @@ export default {
   name: "tris3D",
   data() {
     return {
+      player: false,
+      robot: true,
+      isFull: false,
+      isGameEnd: false,
+      gameWinner: "",
       data_tris: [
         [1, 1, 1],
         [1, 1, 1],
@@ -36,108 +48,6 @@ export default {
     console.log("Mounted");
   },
   methods: {
-    /*  init() {
-      console.log("Init");
-      //Utils
-      const pointer = new THREE.Vector2();
-      let container, stats;
-      let raycaster;
-
-      let INTERSECTED;
-      let theta = 0;
-      stats = new Stats();
-      raycaster = new THREE.Raycaster();
-      //Scena
-      const scene = new THREE.Scene();
-      //Camera
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-
-      //Render
-      const renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector("#tris3DCanvas"),
-        antialias: true,
-      });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      //Render Resize the windows
-      window.addEventListener("resize", function () {
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-        renderer.setSize(width, height);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-      });
-
-      //Controls
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableZoom = true;
-
-      // Lights
-      const pointLight1 = new THREE.PointLight(0xffffff);
-      const lightHelper1 = new THREE.PointLightHelper(pointLight1);
-      pointLight1.position.set(100, 50, 100);
-      pointLight1.intensity = 1;
-      scene.add(pointLight1);
-
-      //Helpers
-      const gridHelper = new THREE.GridHelper(200, 50);
-      scene.add(lightHelper1, gridHelper);
-
-      //Plane
-      const planeGroup = new THREE.Group();
-      const geometryCube = new THREE.BoxGeometry(1, 0.1, 1);
-      const materialOne = new THREE.MeshBasicMaterial({ color: 0xffffed00 });
-      const materialTwo = new THREE.MeshBasicMaterial({ color: 0xff0ff4c6 });
-      const cube1 = new THREE.Mesh(geometryCube, materialOne);
-      const cube2 = new THREE.Mesh(geometryCube, materialTwo);
-      cube2.position.x = -1;
-      //planeGroup.add(cube1, cube2);
-      scene.add(cube1, cube2);
-
-      camera.position.z = 5;
-
-      document.addEventListener("mousemove", onPointerMove);
-      function onPointerMove(event) {
-        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      }
-
-      function animate() {
-        //Request
-        requestAnimationFrame(animate);
-
-        //Intersects
-        raycaster.setFromCamera(pointer, camera);
-
-        const intersects = raycaster.intersectObjects(scene.children, false);
-        if (intersects.length > 0) {
-          if (INTERSECTED != intersects[0].object) {
-            if (INTERSECTED)
-              INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-            INTERSECTED = intersects[0].object;
-            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-            INTERSECTED.material.emissive.setHex(0xff0000);
-          }
-        } else {
-          if (INTERSECTED)
-            INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-          INTERSECTED = null;
-        }
-
-        //Update
-        renderer.render(scene, camera);
-        controls.update();
-        stats.update();
-      }
-      animate();
-    },*/
-
     init2() {
       //Var Useful
       let container, stats, controls;
@@ -152,8 +62,20 @@ export default {
       //Pointer for mouse movement
       const pointer = new THREE.Vector2();
       const radius = 100;
+
+      //Varibili globali
       var data_tris = this.data_tris;
       var map_tris = this.map_tris;
+      var isGameEnd = this.isGameEnd;
+      var gameWinner = this.gameWinner;
+      var isFull = this.isFull;
+
+      //var color
+      var color_plane = new THREE.Color( 0xFF8F2D56 );
+      var color_separe = new THREE.Color( 0xFF23CE6B );
+      var color_x =new THREE.Color( 0xFFF0F600 );
+      var color_o = new THREE.Color( 0xFF084C61 );
+
       init(); //Start
       animate(); //Refresh
 
@@ -201,7 +123,7 @@ export default {
         //const separe = new THREE.BoxGeometry(3, 0.1, 0.05);
         const separe = new RoundedBoxGeometry(3, 0.15, 0.05, 8, 1);
         const materialSepare = new THREE.MeshLambertMaterial({
-          color: 0x0000ff,
+          color:color_separe,
         });
         const altSepare = 0.07;
         const separe1 = new THREE.Mesh(separe, materialSepare);
@@ -231,7 +153,8 @@ export default {
         for (let i = -1; i < 2; i++) {
           for (let j = -1; j < 2; j++) {
             const materialRandom = new THREE.MeshLambertMaterial({
-              color: Math.random() * 0xffffff,
+              // color: Math.random() *     0xffffff,
+              color: color_plane,
             });
             const object = new THREE.Mesh(geometryCube, materialRandom);
             k += 1;
@@ -242,7 +165,7 @@ export default {
             object.name = k;
             object.on("click", function (ev) {
               console.log("Click obg " + ev.data.target.name);
-              placeObj(ev.data.target.name);
+              if (!isGameEnd) placeObj(ev.data.target.name);
             });
 
             scene.add(object);
@@ -302,30 +225,31 @@ export default {
       //Method for place X or O
       function placeObj(k) {
         var position = findPosition(k);
-        //Control is empty 
-        if (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] == 1){
+        //Control is empty
+        if (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] == 1) {
           if (turn) {
             var obg = createX();
-            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3;
+            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5;
           } else {
             var obg = createO();
-            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5;
+            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3;
           }
-        turn = !turn; //change turn
-        //Position obg
-        obg.position.y = 0.2;
-        obg.position.x = position[0];
-        obg.position.z = position[1];
-
-        scene.add(obg);
+          turn = !turn; //change turn
+          //Position obg
+          obg.position.y = 0.1;
+          obg.position.x = position[0];
+          obg.position.z = position[1];
+          scene.add(obg);
         }
+        // this.controll(); //controll winner
+        controll();
       }
 
       //Object X
       function createX() {
         var altX = 0;
         const geometryX = new THREE.BoxGeometry(0.7, 0.15, 0.08);
-        const materialX = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const materialX = new THREE.MeshLambertMaterial({ color: color_x });
         const obj_X_one = new THREE.Mesh(geometryX, materialX);
         obj_X_one.position.y = altX;
         obj_X_one.position.x = 0;
@@ -342,10 +266,10 @@ export default {
       //Object O
       function createO() {
         var altO = 1;
-        const materialO = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const materialO = new THREE.MeshLambertMaterial({ color: color_o  });
         var outerRadius = 0.3;
         var innerRadius = 0.2;
-        var height = 0.05;
+        var height = 0.15;
 
         var arcShape = new THREE.Shape();
         arcShape.moveTo(outerRadius * 2, outerRadius);
@@ -449,6 +373,64 @@ export default {
         //ReRender
         renderer.render(scene, camera);
         // controls.update();
+      }
+      //Method for controll winner
+      function controll() {
+        //Controllo Righe
+        for (var i = 0; i < 3; i++) {
+          var addRig = 1;
+          for (var j = 0; j < 3; j++) {
+            addRig = data_tris[i][j] * addRig;
+          }
+          if (addRig == 27) {
+            gameWinner = "Winner O";
+          }
+          if (addRig == 125) {
+            gameWinner = "Winner X";
+          }
+        }
+        //Controllo Colonne
+        for (var i = 0; i < 3; i++) {
+          var addCol = 1;
+          for (var j = 0; j < 3; j++) {
+            addCol = data_tris[j][i] * addCol;
+          }
+          if (addCol == 27) {
+            gameWinner = "Winner O";
+          }
+          if (addCol == 125) {
+            gameWinner = "Winner X";
+          }
+        }
+        //Controllo Diagonale Sinistra
+        var addDig1 = 1;
+        for (var i = 0; i < 3; i++) {
+          addDig1 = data_tris[i][i] * addDig1;
+          if (addDig1 == 27) {
+            gameWinner = "Winner O";
+          }
+          if (addDig1 == 125) {
+            gameWinner = "Winner X";
+          }
+        }
+        //Controllo Diagonale Destra
+        var addDig2 = data_tris[0][2] * data_tris[1][1] * data_tris[2][0];
+        if (addDig2 == 27) {
+          gameWinner = "Winner O";
+        }
+        if (addDig2 == 125) {
+          gameWinner = "Winner X";
+        }
+        //Final Controll
+        if (gameWinner == "") {
+          if (isFull) {
+            gameWinner = "Parity";
+            isGameEnd = true;
+          }
+        } else {
+          isGameEnd = true;
+        }
+        console.log(gameWinner);
       }
       //Other Methods
     },
