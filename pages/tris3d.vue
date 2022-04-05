@@ -3,9 +3,7 @@
     <div
       class="absolute text-center mx-auto text-6xl"
       style="color: white; left: 50%; transform: translate(-50%, 0)"
-    >
-      {{ data.gameWinner }}
-    </div>
+    ></div>
     <button
       type="button"
       @click="data.isRotateCamera = !data.isRotateCamera"
@@ -40,6 +38,24 @@
     >
       Robot {{ data.robot }}
     </button>
+    <button
+      type="button"
+      @click="reset()"
+      class="
+        absolute
+        bg-blue-500
+        hover:bg-blue-700
+        text-white
+        font-bold
+        py-2
+        px-4
+        rounded-full
+      "
+      style="right: 3px; bottom: 3px"
+      v-show="data.reset"
+    >
+      Reset
+    </button>
   </div>
 </template>
 
@@ -49,6 +65,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { Interaction } from "three.interaction/src/index.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
 export default {
   name: "tris3D",
@@ -61,6 +79,7 @@ export default {
         isGameEnd: false,
         gameWinner: "",
         isRotateCamera: true,
+        reset: false,
       },
       data_tris: [
         [1, 1, 1],
@@ -86,11 +105,12 @@ export default {
     };
   },
   mounted() {
-    this.init2();
+    this.render();
     console.log("Mounted");
   },
   methods: {
-    init2() {
+    render() {
+      THREE.Cache.enabled = true;
       //Var Useful
       let container, stats, controls;
       let camera, scene, raycaster, renderer;
@@ -117,7 +137,8 @@ export default {
       var color_borderPlane = new THREE.Color("rgb(0, 34, 35)");
       var color_x = new THREE.Color("rgb(254, 198, 1)");
       var color_o = new THREE.Color("rgb(183, 36, 92)");
-
+      var color_text_front = new THREE.Color("rgb(255, 195, 0)");
+      var color_text_side = new THREE.Color("rgb(81, 0, 135)");
       init(); //Start
       animate(); //Refresh
 
@@ -173,18 +194,23 @@ export default {
         const separe1 = new THREE.Mesh(separe, materialSepare);
         separe1.position.y = altSepare;
         separe1.position.z = 0.5;
+        separe1.receiveShadow = true;
         const separe2 = new THREE.Mesh(separe, materialSepare);
         separe2.position.y = altSepare;
         separe2.position.z = -0.5;
+        separe2.receiveShadow = true;
         const separe3 = new THREE.Mesh(separe, materialSepare);
         separe3.position.y = altSepare;
         separe3.position.x = 0.5;
         separe3.rotation.y = Math.PI / 2;
+        separe3.receiveShadow = true;
         const separe4 = new THREE.Mesh(separe, materialSepare);
         separe4.position.y = altSepare;
         separe4.position.x = -0.5;
         separe4.rotation.y = Math.PI / 2;
+        separe4.receiveShadow = true;
         scene.add(separe1, separe2, separe3, separe4);
+
         //Border Plane
         const geometry_borderPlane = new THREE.BoxGeometry(3.2, 0.1, 0.1);
         const materialBorderPlane = new THREE.MeshLambertMaterial({
@@ -195,22 +221,26 @@ export default {
           materialBorderPlane
         );
         borderPlane1.position.z = 1.55;
+        borderPlane1.receiveShadow = true;
         const borderPlane2 = new THREE.Mesh(
           geometry_borderPlane,
           materialBorderPlane
         );
         borderPlane2.position.z = -1.55;
+        borderPlane2.receiveShadow = true;
         const borderPlane3 = new THREE.Mesh(
           geometry_borderPlane,
           materialBorderPlane
         );
         borderPlane3.position.x = -1.55;
+        borderPlane3.receiveShadow = true;
         borderPlane3.rotation.y = Math.PI / 2;
         const borderPlane4 = new THREE.Mesh(
           geometry_borderPlane,
           materialBorderPlane
         );
         borderPlane4.position.x = 1.55;
+        borderPlane4.receiveShadow = true;
         borderPlane4.rotation.y = Math.PI / 2;
         scene.add(borderPlane1, borderPlane2, borderPlane3, borderPlane4);
         //Plane
@@ -226,7 +256,7 @@ export default {
         for (let i = -1; i < 2; i++) {
           for (let j = -1; j < 2; j++) {
             const materialRandom = new THREE.MeshLambertMaterial({
-              // color: Math.random() *     0xffffff,
+              // color: Math.random() * 0xffffff,
               color: color_plane,
             });
             const object = new THREE.Mesh(geometryCube, materialRandom);
@@ -257,15 +287,6 @@ export default {
             objIntersected.push(object);
           }
         }
-
-//Game History view
-//x
-var gameHistory_x = createX();
-gameHistory_x.position.y = 3;
-gameHistory_x.position.x = 1;
-gameHistory_x.position.z = 1;
-gameHistory_x.rotation.x = Math.PI / 2 / 2;
-    scene.add(gameHistory_x);
 
         //Camera Position
         camera.position.z = 5;
@@ -359,15 +380,19 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
       function createX() {
         var altX = 0;
         const geometryX = new THREE.BoxGeometry(0.7, 0.15, 0.08);
-        const materialX = new THREE.MeshLambertMaterial({ color: color_x });
+        const materialX = new THREE.MeshPhongMaterial({ color: color_x });
         const obj_X_one = new THREE.Mesh(geometryX, materialX);
         obj_X_one.position.y = altX;
         obj_X_one.position.x = 0;
         obj_X_one.rotation.y = Math.PI / 2 / 2;
+        obj_X_one.castShadow = true;
+        obj_X_one.receiveShadow = true;
         const obj_X_two = new THREE.Mesh(geometryX, materialX);
         obj_X_two.position.y = altX;
         obj_X_two.position.x = 0;
         obj_X_two.rotation.y = -(Math.PI / 2) / 2;
+        obj_X_two.castShadow = true;
+        obj_X_two.receiveShadow = true;
         const groupX = new THREE.Group();
         groupX.add(obj_X_one);
         groupX.add(obj_X_two);
@@ -376,7 +401,7 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
       //Object O
       function createO() {
         var altO = 1;
-        const materialO = new THREE.MeshLambertMaterial({ color: color_o });
+        const materialO = new THREE.MeshPhongMaterial({ color: color_o });
         var outerRadius = 0.3;
         var innerRadius = 0.2;
         var height = 0.15;
@@ -413,7 +438,8 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
         geometryO.rotateX(Math.PI * -0.5);
         var objO = new THREE.Mesh(geometryO, materialO);
         objO.position.y = altO;
-
+        objO.castShadow = true;
+        objO.receiveShadow = true;
         return objO;
       }
       //Method Usufull for game logic
@@ -486,6 +512,7 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
       }
       //Method for controll winner
       function controll() {
+        var winner = "";
         //Controllo Righe
         for (var i = 0; i < 3; i++) {
           var addRig = 1;
@@ -493,10 +520,10 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
             addRig = data_tris[i][j] * addRig;
           }
           if (addRig == 27) {
-            data.gameWinner = "Winner O";
+            winner = "o";
           }
           if (addRig == 125) {
-            data.gameWinner = "Winner X";
+            winner = "x";
           }
         }
         //Controllo Colonne
@@ -506,10 +533,10 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
             addCol = data_tris[j][i] * addCol;
           }
           if (addCol == 27) {
-            data.gameWinner = "Winner O";
+            winner = "o";
           }
           if (addCol == 125) {
-            data.gameWinner = "Winner X";
+            winner = "x";
           }
         }
         //Controllo Diagonale Sinistra
@@ -517,28 +544,32 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
         for (var i = 0; i < 3; i++) {
           addDig1 = data_tris[i][i] * addDig1;
           if (addDig1 == 27) {
-            data.gameWinner = "Winner O";
+            winner = "o";
           }
           if (addDig1 == 125) {
-            data.gameWinner = "Winner X";
+            winner = "x";
           }
         }
         //Controllo Diagonale Destra
         var addDig2 = data_tris[0][2] * data_tris[1][1] * data_tris[2][0];
         if (addDig2 == 27) {
-          data.gameWinner = "Winner O";
+          winner = "o";
         }
         if (addDig2 == 125) {
-          data.gameWinner = "Winner X";
+          winner = "x";
         }
         //Final Controll
+        if (winner == "x") data.gameWinner = "X Victory";
+        if (winner == "o") data.gameWinner = "O Victory";
         if (data.gameWinner == "") {
           if (data.isFull) {
             data.gameWinner = "Parity";
             data.isGameEnd = true;
+            showWinner();
           }
         } else {
           data.isGameEnd = true;
+          showWinner();
         }
       }
       //Method for AI Robot
@@ -750,7 +781,63 @@ gameHistory_x.rotation.x = Math.PI / 2 / 2;
             }
         }
       }
+      //View Winner
+      function showWinner() {
+        data.reset = true;
+        //TEXT VICTORY
+        var loaderText = new FontLoader();
+        loaderText.load("Montserrat_Bold.json", function (font) {
+          const geometry = new TextGeometry(data.gameWinner, {
+            font: font,
+            size: 0.5,
+            height: 0.3,
+          });
+          geometry.computeBoundingBox();
+          console.log(geometry.boundingBox);
+          geometry.center();
+          const materials = [
+            new THREE.MeshPhongMaterial({ color: color_text_front }), // front
+            new THREE.MeshPhongMaterial({ color: color_text_side }), // side
+          ];
+          const textVictory = new THREE.Mesh(geometry, materials);
+          textVictory.castShadow = true;
+          textVictory.position.y = 1.5;
+          textVictory.position.x = 0;
+          textVictory.rotation.x = -Math.PI / 2 / 2;
+          scene.add(textVictory);
+
+          //Game History view
+          /*
+          var gameHistory_x = createX();
+          gameHistory_x.position.y = 0;
+          gameHistory_x.position.x = 3;
+          gameHistory_x.position.z = 0;
+          //gameHistory_x.rotation.x = Math.PI  / 2;
+          var gameHistory_o = createO();
+          gameHistory_o.position.y = 0;
+          gameHistory_o.position.x = 4;
+          gameHistory_o.position.z = 0;
+          //gameHistory_x.rotation.x = Math.PI  / 2;
+          scene.add(gameHistory_x, gameHistory_o);
+          */
+        });
+      }
+
       //Other Methods
+    },
+    reset() {
+      (this.data = {
+        isFull: false,
+        isGameEnd: false,
+        gameWinner: "",
+        reset: false,
+      }),
+        (this.data_tris = [
+          [1, 1, 1],
+          [1, 1, 1],
+          [1, 1, 1],
+        ]);
+       this.render();
     },
   },
   components: {},
