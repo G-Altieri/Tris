@@ -1,11 +1,17 @@
 <template>
   <div>
     <div
-      class="absolute text-center mx-auto"
+      class="absolute text-center mx-auto text-6xl"
       style="color: white; left: 50%; transform: translate(-50%, 0)"
     >
-      {{ gameWinner }}
+      {{ data.gameWinner }}
     </div>
+      <button type="button" @click="data.isRotateCamera = !data.isRotateCamera" class="absolute  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" style="left:3px; bottom:3px;">
+        Rotate Camera 
+      </button>
+      <button type="button" @click="data.robot = !data.robot" class="absolute  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" style="right:3px; bottom:3px;">
+       Robot {{data.robot}}
+      </button>
   </div>
 </template>
 
@@ -20,11 +26,14 @@ export default {
   name: "tris3D",
   data() {
     return {
-      player: false,
-      robot: true,
-      isFull: false,
-      isGameEnd: false,
-      gameWinner: "",
+      data: {
+        player: false,
+        robot: true,
+        isFull: false,
+        isGameEnd: false,
+        gameWinner: "",
+        isRotateCamera: true,
+      },
       data_tris: [
         [1, 1, 1],
         [1, 1, 1],
@@ -66,15 +75,16 @@ export default {
       //Varibili globali
       var data_tris = this.data_tris;
       var map_tris = this.map_tris;
-      var isGameEnd = this.isGameEnd;
-      var gameWinner = this.gameWinner;
-      var isFull = this.isFull;
+      var data = this.data;
+
 
       //var color
-      var color_plane = new THREE.Color( 0xFF8F2D56 );
-      var color_separe = new THREE.Color( 0xFF23CE6B );
-      var color_x =new THREE.Color( 0xFFF0F600 );
-      var color_o = new THREE.Color( 0xFF084C61 );
+      var color_bg = new THREE.Color("rgb(132, 108, 91)");
+      var color_plane = new THREE.Color("rgb(2, 52, 54)");
+      var color_separe = new THREE.Color("rgb(17, 17, 17)");
+      var color_borderPlane = new THREE.Color("rgb(0, 34, 35)");
+      var color_x = new THREE.Color("rgb(254, 198, 1)");
+      var color_o = new THREE.Color("rgb(183, 36, 92)");
 
       init(); //Start
       animate(); //Refresh
@@ -96,11 +106,13 @@ export default {
 
         //Scene
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
+        scene.background = color_bg;
 
         //Light
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 5, 1).normalize();
+        const light = new THREE.DirectionalLight(0xffffff, 1.5);
+        light.position.set(1, 5, 1);
+        light.castShadow = true;
+        //.normalize();
         const lightHelper1 = new THREE.PointLightHelper(light);
         scene.add(light);
 
@@ -121,9 +133,9 @@ export default {
 
         //Plane Separe
         //const separe = new THREE.BoxGeometry(3, 0.1, 0.05);
-        const separe = new RoundedBoxGeometry(3, 0.15, 0.05, 8, 1);
+        const separe = new RoundedBoxGeometry(3.2, 0.15, 0.05, 8, 1);
         const materialSepare = new THREE.MeshLambertMaterial({
-          color:color_separe,
+          color: color_separe,
         });
         const altSepare = 0.07;
         const separe1 = new THREE.Mesh(separe, materialSepare);
@@ -141,6 +153,34 @@ export default {
         separe4.position.x = -0.5;
         separe4.rotation.y = Math.PI / 2;
         scene.add(separe1, separe2, separe3, separe4);
+        //Border Plane
+        const geometry_borderPlane = new THREE.BoxGeometry(3.2, 0.1, 0.1);
+        const materialBorderPlane = new THREE.MeshLambertMaterial({
+          color: color_borderPlane,
+        });
+        const borderPlane1 = new THREE.Mesh(
+          geometry_borderPlane,
+          materialBorderPlane
+        );
+        borderPlane1.position.z = 1.55;
+        const borderPlane2 = new THREE.Mesh(
+          geometry_borderPlane,
+          materialBorderPlane
+        );
+        borderPlane2.position.z = -1.55;
+        const borderPlane3 = new THREE.Mesh(
+          geometry_borderPlane,
+          materialBorderPlane
+        );
+        borderPlane3.position.x = -1.55;
+        borderPlane3.rotation.y = Math.PI / 2;
+        const borderPlane4 = new THREE.Mesh(
+          geometry_borderPlane,
+          materialBorderPlane
+        );
+        borderPlane4.position.x = 1.55;
+        borderPlane4.rotation.y = Math.PI / 2;
+        scene.add(borderPlane1, borderPlane2, borderPlane3, borderPlane4);
         //Plane
         const geometryCube = new THREE.BoxGeometry(1, 0.1, 1);
         const materialOne = new THREE.MeshLambertMaterial({
@@ -149,6 +189,7 @@ export default {
         const materialTwo = new THREE.MeshLambertMaterial({
           color: 0xff0ff4c6,
         });
+        //Generate Game Plane
         let k = 0;
         for (let i = -1; i < 2; i++) {
           for (let j = -1; j < 2; j++) {
@@ -163,20 +204,23 @@ export default {
             object.position.z = i;
             object.cursor = "pointer";
             object.name = k;
+            //Click on plane
             object.on("click", function (ev) {
               console.log("Click obg " + ev.data.target.name);
-              if (!isGameEnd) placeObj(ev.data.target.name);
+              if (!data.isGameEnd) placeObj(ev.data.target.name);
+              if(!data.isGameEnd && data.robot) playRobot();
             });
 
+            object.receiveShadow = true;
             scene.add(object);
             objIntersected.push(object);
           }
         }
 
         //Camera Position
-        camera.position.z = 0;
-        camera.position.x = 0;
-        camera.position.y = 10;
+        camera.position.z = 5;
+        camera.position.x = 4;
+        camera.position.y = 5;
 
         //RayCaster declaration
         raycaster = new THREE.Raycaster();
@@ -185,13 +229,16 @@ export default {
         container = document.createElement("div");
         document.body.appendChild(container); //Append 3d in to html
         renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
 
         //Controls
-        const controls = new OrbitControls(camera, renderer.domElement);
+        controls = new OrbitControls(camera, renderer.domElement);
         controls.enableZoom = true;
+        controls.autoRotate = data.isRotateCamera;
         // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         // controls.dampingFactor = 0.05;
 
@@ -266,7 +313,7 @@ export default {
       //Object O
       function createO() {
         var altO = 1;
-        const materialO = new THREE.MeshLambertMaterial({ color: color_o  });
+        const materialO = new THREE.MeshLambertMaterial({ color: color_o });
         var outerRadius = 0.3;
         var innerRadius = 0.2;
         var height = 0.15;
@@ -333,8 +380,9 @@ export default {
       //Animate Loop
       function animate() {
         requestAnimationFrame(animate);
-
-        //controls.update();
+        //Control Camera
+        controls.autoRotate = data.isRotateCamera;
+        controls.update();
         stats.update();
         render();
       }
@@ -345,7 +393,6 @@ export default {
         //  camera.position.y = radius * Math.sin(THREE.MathUtils.degToRad(theta));
         //camera.position.z = radius * Math.cos(THREE.MathUtils.degToRad(theta));
         //camera.lookAt(scene.position);
-
         camera.updateMatrixWorld();
 
         // Find intersections
@@ -383,10 +430,10 @@ export default {
             addRig = data_tris[i][j] * addRig;
           }
           if (addRig == 27) {
-            gameWinner = "Winner O";
+            data.gameWinner = "Winner O";
           }
           if (addRig == 125) {
-            gameWinner = "Winner X";
+            data.gameWinner = "Winner X";
           }
         }
         //Controllo Colonne
@@ -396,10 +443,10 @@ export default {
             addCol = data_tris[j][i] * addCol;
           }
           if (addCol == 27) {
-            gameWinner = "Winner O";
+            data.gameWinner = "Winner O";
           }
           if (addCol == 125) {
-            gameWinner = "Winner X";
+            data.gameWinner = "Winner X";
           }
         }
         //Controllo Diagonale Sinistra
@@ -407,31 +454,239 @@ export default {
         for (var i = 0; i < 3; i++) {
           addDig1 = data_tris[i][i] * addDig1;
           if (addDig1 == 27) {
-            gameWinner = "Winner O";
+            data.gameWinner = "Winner O";
           }
           if (addDig1 == 125) {
-            gameWinner = "Winner X";
+            data.gameWinner = "Winner X";
           }
         }
         //Controllo Diagonale Destra
         var addDig2 = data_tris[0][2] * data_tris[1][1] * data_tris[2][0];
         if (addDig2 == 27) {
-          gameWinner = "Winner O";
+          data.gameWinner = "Winner O";
         }
         if (addDig2 == 125) {
-          gameWinner = "Winner X";
+          data.gameWinner = "Winner X";
         }
         //Final Controll
-        if (gameWinner == "") {
-          if (isFull) {
-            gameWinner = "Parity";
-            isGameEnd = true;
+        if (data.gameWinner == "") {
+          if (data.isFull) {
+            data.gameWinner = "Parity";
+            data.isGameEnd = true;
           }
         } else {
-          isGameEnd = true;
+          data.isGameEnd = true;
         }
-        console.log(gameWinner);
+        console.log(data.isGameEnd);
       }
+       //Method for AI Robot
+    function playRobot() {
+      console.log("Gioca il robot");
+
+      var random = true;
+      var isValuePut = true;
+
+      //MOSSE VINCENTI
+      //Play Rows
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcRiga = 1;
+          for (var j = 0; j < 3; j++) {
+            calcRiga = data_tris[i][j] * calcRiga;
+            console.log(calcRiga)
+          }
+          if (calcRiga == 9) {
+            for (var j = 0; j < 3; j++) {
+              if (data_tris[i][j] == 1) {
+                placeObj(getPositionTrisMap(i, j));
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+
+      //Play Columns
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcColum = 1;
+          for (var j = 0; j < 3; j++) {
+            calcColum = data_tris[j][i] * calcColum;
+          }
+          if (calcColum == 9) {
+            for (var j = 0; j < 3; j++) {
+              if (data_tris[j][i] == 1) {
+                 placeObj(getPositionTrisMap(j, i));
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+/*
+      //Play Diagonal Sinistra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
+        if (calcDiagonalSx == 9) {
+          for (var j = 0; j < 3; j++) {
+            if (this.data_tris[j][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(j, j), 3);
+              isValuePut = false;
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Destra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
+        if (calcDiagonalSx == 9) {
+          var i = 0;
+          var j = 2;
+          for (var k = 0; k < 3; k++) {
+            if (this.data_tris[i][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(i, j), 3);
+              isValuePut = false;
+            }
+            i += 1;
+            j -= 1;
+          }
+        }
+      }
+
+      //MOSSE BLOCANTI
+      //Play Rows
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcRiga = 1;
+          for (var j = 0; j < 3; j++) {
+            calcRiga = this.data_tris[i][j] * calcRiga;
+          }
+          if (calcRiga == 25) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[i][j] == 1) {
+                this.selectCasella(this.getPositionTrisMap(i, j), 3);
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+      //Play Columns
+      if (isValuePut) {
+        for (var i = 0; i < 3; i++) {
+          var calcColum = 1;
+          for (var j = 0; j < 3; j++) {
+            calcColum = this.data_tris[j][i] * calcColum;
+          }
+          if (calcColum == 25) {
+            for (var j = 0; j < 3; j++) {
+              if (this.data_tris[j][i] == 1) {
+                this.selectCasella(this.getPositionTrisMap(j, i), 3);
+                isValuePut = false;
+              }
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Sinistra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
+        if (calcDiagonalSx == 25) {
+          for (var j = 0; j < 3; j++) {
+            if (this.data_tris[j][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(j, j), 3);
+              isValuePut = false;
+            }
+          }
+        }
+      }
+
+      //Play Diagonal Destra
+      if (isValuePut) {
+        var calcDiagonalSx =
+          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
+        if (calcDiagonalSx == 25) {
+          var i = 0;
+          var j = 2;
+          for (var k = 0; k < 3; k++) {
+            if (this.data_tris[i][j] == 1) {
+              this.selectCasella(this.getPositionTrisMap(i, j), 3);
+              isValuePut = false;
+            }
+            i += 1;
+            j -= 1;
+          }
+        }
+      }
+
+      //TEST IMPOSSIBLE Victory
+      //Play Diagonal Destra
+      if (isValuePut) {
+        console.log(this.data_tris[1][1] == 1);
+        if (this.data_tris[1][1] == 1)
+          if (
+            this.data_tris[0][0] == 5 ||
+            this.data_tris[0][2] == 5 ||
+            this.data_tris[2][0] == 5 ||
+            this.data_tris[2][2] == 5
+          ) {
+            console.log("XXX");
+            this.selectCasella(this.getPositionTrisMap(1, 1), 3);
+            isValuePut = false;
+          }
+      }
+*/
+      //Position Random
+      if (isValuePut && !this.isFull) {
+        while (random) {
+          var numRandom = Math.floor(Math.random() * 10);
+          if (render_tris[numRandom] == 1) {
+            placeObj();
+            random = false;
+            isValuePut = false;
+          }
+        }
+      }
+
+    }
+
+    //Position Numeber da i, j
+   function getPositionTrisMap(i, j) {
+      switch (i) {
+        case 0:
+          switch (j) {
+            case 0:
+              return 1;
+            case 1:
+              return 2;
+            case 2:
+              return 3;
+          }
+        case 1:
+          switch (j) {
+            case 0:
+              return 4;
+            case 1:
+              return 5;
+            case 2:
+              return 6;
+          }
+        case 2:
+          switch (j) {
+            case 0:
+              return 7;
+            case 1:
+              return 8;
+            case 2:
+              return 9;
+          }
+      }
+    }
       //Other Methods
     },
   },
