@@ -6,12 +6,40 @@
     >
       {{ data.gameWinner }}
     </div>
-      <button type="button" @click="data.isRotateCamera = !data.isRotateCamera" class="absolute  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" style="left:3px; bottom:3px;">
-        Rotate Camera 
-      </button>
-      <button type="button" @click="data.robot = !data.robot" class="absolute  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" style="right:3px; bottom:3px;">
-       Robot {{data.robot}}
-      </button>
+    <button
+      type="button"
+      @click="data.isRotateCamera = !data.isRotateCamera"
+      class="
+        absolute
+        bg-blue-500
+        hover:bg-blue-700
+        text-white
+        font-bold
+        py-2
+        px-4
+        rounded-full
+      "
+      style="left: 3px; bottom: 3px"
+    >
+      Rotate Camera
+    </button>
+    <button
+      type="button"
+      @click="data.robot = !data.robot"
+      class="
+        absolute
+        bg-blue-500
+        hover:bg-blue-700
+        text-white
+        font-bold
+        py-2
+        px-4
+        rounded-full
+      "
+      style="right: 3px; bottom: 3px"
+    >
+      Robot {{ data.robot }}
+    </button>
   </div>
 </template>
 
@@ -50,6 +78,11 @@ export default {
         8: "21",
         9: "22",
       },
+      gameHistory: {
+        victory_x: 0,
+        victory_o: 0,
+        victory_parity: 0,
+      },
     };
   },
   mounted() {
@@ -76,7 +109,6 @@ export default {
       var data_tris = this.data_tris;
       var map_tris = this.map_tris;
       var data = this.data;
-
 
       //var color
       var color_bg = new THREE.Color("rgb(132, 108, 91)");
@@ -207,8 +239,17 @@ export default {
             //Click on plane
             object.on("click", function (ev) {
               console.log("Click obg " + ev.data.target.name);
-              if (!data.isGameEnd) placeObj(ev.data.target.name);
-              if(!data.isGameEnd && data.robot) playRobot();
+              //Controllo per vedere se si clicca su un obg gia messo
+              if (
+                data_tris[map_tris[ev.data.target.name].charAt(0)][
+                  map_tris[ev.data.target.name].charAt(1)
+                ] == 1 &&
+                !data.isGameEnd &&
+                !data.isFull
+              ) {
+                placeObj(ev.data.target.name);
+                if (data.robot) playRobot();
+              }
             });
 
             object.receiveShadow = true;
@@ -216,6 +257,15 @@ export default {
             objIntersected.push(object);
           }
         }
+
+//Game History view
+//x
+var gameHistory_x = createX();
+gameHistory_x.position.y = 3;
+gameHistory_x.position.x = 1;
+gameHistory_x.position.z = 1;
+gameHistory_x.rotation.x = Math.PI / 2 / 2;
+    scene.add(gameHistory_x);
 
         //Camera Position
         camera.position.z = 5;
@@ -254,7 +304,7 @@ export default {
 
         //Listener Resize Page
         window.addEventListener("resize", onWindowResize);
-      }
+      } // Init end
 
       //Resize Page
       function onWindowResize() {
@@ -289,6 +339,19 @@ export default {
           scene.add(obg);
         }
         // this.controll(); //controll winner
+
+        //Controll is Full
+        var find = false;
+        for (var i = 0; i < 3 && !find; i++) {
+          for (var j = 0; j < 3 && !find; j++) {
+            if (data_tris[i][j] == 1) {
+              find = true;
+            }
+          }
+        }
+        if (find) data.isFull = false;
+        else data.isFull = true;
+
         controll();
       }
 
@@ -477,216 +540,216 @@ export default {
         } else {
           data.isGameEnd = true;
         }
-        console.log(data.isGameEnd);
       }
-       //Method for AI Robot
-    function playRobot() {
-      console.log("Gioca il robot");
+      //Method for AI Robot
+      function playRobot() {
+        console.log("Gioca il robot");
 
-      var random = true;
-      var isValuePut = true;
+        var random = true;
+        var isValuePut = true;
 
-      //MOSSE VINCENTI
-      //Play Rows
-      if (isValuePut) {
-        for (var i = 0; i < 3; i++) {
-          var calcRiga = 1;
-          for (var j = 0; j < 3; j++) {
-            calcRiga = data_tris[i][j] * calcRiga;
-            console.log(calcRiga)
-          }
-          if (calcRiga == 9) {
+        //MOSSE VINCENTI
+        //Play Rows
+        if (isValuePut) {
+          for (var i = 0; i < 3; i++) {
+            var calcRiga = 1;
             for (var j = 0; j < 3; j++) {
+              calcRiga = data_tris[i][j] * calcRiga;
+            }
+            if (calcRiga == 9) {
+              for (var j = 0; j < 3; j++) {
+                if (data_tris[i][j] == 1) {
+                  placeObj(getPositionTrisMap(i, j));
+                  isValuePut = false;
+                }
+              }
+            }
+          }
+        }
+
+        //Play Columns
+        if (isValuePut) {
+          for (var i = 0; i < 3; i++) {
+            var calcColum = 1;
+            for (var j = 0; j < 3; j++) {
+              calcColum = data_tris[j][i] * calcColum;
+            }
+            if (calcColum == 9) {
+              for (var j = 0; j < 3; j++) {
+                if (data_tris[j][i] == 1) {
+                  placeObj(getPositionTrisMap(j, i));
+                  isValuePut = false;
+                }
+              }
+            }
+          }
+        }
+
+        //Play Diagonal Sinistra
+        if (isValuePut) {
+          var calcDiagonalSx =
+            data_tris[0][0] * data_tris[1][1] * data_tris[2][2];
+          if (calcDiagonalSx == 9) {
+            for (var j = 0; j < 3; j++) {
+              if (data_tris[j][j] == 1) {
+                placeObj(getPositionTrisMap(j, j));
+                isValuePut = false;
+              }
+            }
+          }
+        }
+
+        //Play Diagonal Destra
+        if (isValuePut) {
+          var calcDiagonalSx =
+            data_tris[0][2] * data_tris[1][1] * data_tris[2][0];
+          if (calcDiagonalSx == 9) {
+            var i = 0;
+            var j = 2;
+            for (var k = 0; k < 3; k++) {
               if (data_tris[i][j] == 1) {
                 placeObj(getPositionTrisMap(i, j));
                 isValuePut = false;
               }
+              i += 1;
+              j -= 1;
             }
           }
         }
-      }
 
-      //Play Columns
-      if (isValuePut) {
-        for (var i = 0; i < 3; i++) {
-          var calcColum = 1;
-          for (var j = 0; j < 3; j++) {
-            calcColum = data_tris[j][i] * calcColum;
-          }
-          if (calcColum == 9) {
+        //MOSSE BLOCANTI
+        //Play Rows
+        if (isValuePut) {
+          for (var i = 0; i < 3; i++) {
+            var calcRiga = 1;
             for (var j = 0; j < 3; j++) {
-              if (data_tris[j][i] == 1) {
-                 placeObj(getPositionTrisMap(j, i));
+              calcRiga = data_tris[i][j] * calcRiga;
+            }
+            if (calcRiga == 25) {
+              for (var j = 0; j < 3; j++) {
+                if (data_tris[i][j] == 1) {
+                  placeObj(getPositionTrisMap(i, j));
+                  isValuePut = false;
+                }
+              }
+            }
+          }
+        }
+        //Play Columns
+        if (isValuePut) {
+          for (var i = 0; i < 3; i++) {
+            var calcColum = 1;
+            for (var j = 0; j < 3; j++) {
+              calcColum = data_tris[j][i] * calcColum;
+            }
+            if (calcColum == 25) {
+              for (var j = 0; j < 3; j++) {
+                if (data_tris[j][i] == 1) {
+                  placeObj(getPositionTrisMap(j, i));
+                  isValuePut = false;
+                }
+              }
+            }
+          }
+        }
+
+        //Play Diagonal Sinistra
+        if (isValuePut) {
+          var calcDiagonalSx =
+            data_tris[0][0] * data_tris[1][1] * data_tris[2][2];
+          if (calcDiagonalSx == 25) {
+            for (var j = 0; j < 3; j++) {
+              if (data_tris[j][j] == 1) {
+                placeObj(getPositionTrisMap(j, j));
                 isValuePut = false;
               }
             }
           }
         }
-      }
-/*
-      //Play Diagonal Sinistra
-      if (isValuePut) {
-        var calcDiagonalSx =
-          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
-        if (calcDiagonalSx == 9) {
-          for (var j = 0; j < 3; j++) {
-            if (this.data_tris[j][j] == 1) {
-              this.selectCasella(this.getPositionTrisMap(j, j), 3);
-              isValuePut = false;
-            }
-          }
-        }
-      }
 
-      //Play Diagonal Destra
-      if (isValuePut) {
-        var calcDiagonalSx =
-          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
-        if (calcDiagonalSx == 9) {
-          var i = 0;
-          var j = 2;
-          for (var k = 0; k < 3; k++) {
-            if (this.data_tris[i][j] == 1) {
-              this.selectCasella(this.getPositionTrisMap(i, j), 3);
-              isValuePut = false;
-            }
-            i += 1;
-            j -= 1;
-          }
-        }
-      }
-
-      //MOSSE BLOCANTI
-      //Play Rows
-      if (isValuePut) {
-        for (var i = 0; i < 3; i++) {
-          var calcRiga = 1;
-          for (var j = 0; j < 3; j++) {
-            calcRiga = this.data_tris[i][j] * calcRiga;
-          }
-          if (calcRiga == 25) {
-            for (var j = 0; j < 3; j++) {
-              if (this.data_tris[i][j] == 1) {
-                this.selectCasella(this.getPositionTrisMap(i, j), 3);
+        //Play Diagonal Destra
+        if (isValuePut) {
+          var calcDiagonalSx =
+            data_tris[0][2] * data_tris[1][1] * data_tris[2][0];
+          if (calcDiagonalSx == 25) {
+            var i = 0;
+            var j = 2;
+            for (var k = 0; k < 3; k++) {
+              if (data_tris[i][j] == 1) {
+                placeObj(getPositionTrisMap(i, j));
                 isValuePut = false;
               }
+              i += 1;
+              j -= 1;
             }
           }
         }
-      }
-      //Play Columns
-      if (isValuePut) {
-        for (var i = 0; i < 3; i++) {
-          var calcColum = 1;
-          for (var j = 0; j < 3; j++) {
-            calcColum = this.data_tris[j][i] * calcColum;
-          }
-          if (calcColum == 25) {
-            for (var j = 0; j < 3; j++) {
-              if (this.data_tris[j][i] == 1) {
-                this.selectCasella(this.getPositionTrisMap(j, i), 3);
-                isValuePut = false;
-              }
-            }
-          }
-        }
-      }
 
-      //Play Diagonal Sinistra
-      if (isValuePut) {
-        var calcDiagonalSx =
-          this.data_tris[0][0] * this.data_tris[1][1] * this.data_tris[2][2];
-        if (calcDiagonalSx == 25) {
-          for (var j = 0; j < 3; j++) {
-            if (this.data_tris[j][j] == 1) {
-              this.selectCasella(this.getPositionTrisMap(j, j), 3);
+        //TEST IMPOSSIBLE Victory
+        //Play Diagonal Destra
+        if (isValuePut) {
+          if (data_tris[1][1] == 1)
+            if (
+              data_tris[0][0] == 5 ||
+              data_tris[0][2] == 5 ||
+              data_tris[2][0] == 5 ||
+              data_tris[2][2] == 5
+            ) {
+              console.log("XXX");
+              placeObj(getPositionTrisMap(1, 1));
               isValuePut = false;
             }
-          }
         }
-      }
 
-      //Play Diagonal Destra
-      if (isValuePut) {
-        var calcDiagonalSx =
-          this.data_tris[0][2] * this.data_tris[1][1] * this.data_tris[2][0];
-        if (calcDiagonalSx == 25) {
-          var i = 0;
-          var j = 2;
-          for (var k = 0; k < 3; k++) {
-            if (this.data_tris[i][j] == 1) {
-              this.selectCasella(this.getPositionTrisMap(i, j), 3);
+        //Position Random
+        if (isValuePut && !data.isFull) {
+          while (random) {
+            var numRandom = Math.floor(Math.random() * 9) + 1;
+            if (
+              data_tris[map_tris[numRandom].charAt(0)][
+                map_tris[numRandom].charAt(1)
+              ] == 1
+            ) {
+              random = false;
               isValuePut = false;
+              placeObj(numRandom);
             }
-            i += 1;
-            j -= 1;
           }
         }
       }
 
-      //TEST IMPOSSIBLE Victory
-      //Play Diagonal Destra
-      if (isValuePut) {
-        console.log(this.data_tris[1][1] == 1);
-        if (this.data_tris[1][1] == 1)
-          if (
-            this.data_tris[0][0] == 5 ||
-            this.data_tris[0][2] == 5 ||
-            this.data_tris[2][0] == 5 ||
-            this.data_tris[2][2] == 5
-          ) {
-            console.log("XXX");
-            this.selectCasella(this.getPositionTrisMap(1, 1), 3);
-            isValuePut = false;
-          }
-      }
-*/
-      //Position Random
-      if (isValuePut && !this.isFull) {
-        while (random) {
-          var numRandom = Math.floor(Math.random() * 10);
-          if (render_tris[numRandom] == 1) {
-            placeObj();
-            random = false;
-            isValuePut = false;
-          }
+      //Position Numeber da i, j
+      function getPositionTrisMap(i, j) {
+        switch (i) {
+          case 0:
+            switch (j) {
+              case 0:
+                return 1;
+              case 1:
+                return 2;
+              case 2:
+                return 3;
+            }
+          case 1:
+            switch (j) {
+              case 0:
+                return 4;
+              case 1:
+                return 5;
+              case 2:
+                return 6;
+            }
+          case 2:
+            switch (j) {
+              case 0:
+                return 7;
+              case 1:
+                return 8;
+              case 2:
+                return 9;
+            }
         }
       }
-
-    }
-
-    //Position Numeber da i, j
-   function getPositionTrisMap(i, j) {
-      switch (i) {
-        case 0:
-          switch (j) {
-            case 0:
-              return 1;
-            case 1:
-              return 2;
-            case 2:
-              return 3;
-          }
-        case 1:
-          switch (j) {
-            case 0:
-              return 4;
-            case 1:
-              return 5;
-            case 2:
-              return 6;
-          }
-        case 2:
-          switch (j) {
-            case 0:
-              return 7;
-            case 1:
-              return 8;
-            case 2:
-              return 9;
-          }
-      }
-    }
       //Other Methods
     },
   },
