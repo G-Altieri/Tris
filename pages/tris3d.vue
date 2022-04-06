@@ -1,14 +1,11 @@
 <template>
   <div>
-    <div
-      class="absolute text-center mx-auto text-6xl"
-      style="color: white; left: 50%; transform: translate(-50%, 0)"
-    ></div>
     <button
-      type="button"
-      @click="data.isRotateCamera = !data.isRotateCamera"
       class="
         absolute
+        text-center
+        mx-auto
+        text-6xl
         bg-blue-500
         hover:bg-blue-700
         text-white
@@ -17,10 +14,68 @@
         px-4
         rounded-full
       "
-      style="left: 3px; bottom: 3px"
+      style="
+        color: white;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      "
+      @click="data.isGameStart = true"
+      v-show="!data.isGameStart"
     >
-      Rotate Camera
+      PLAY
     </button>
+    <div
+      class="
+        absolute
+        text-center
+        mx-auto
+        text-6xl text-white
+        font-bold
+        py-2
+        px-4
+        rounded-full
+      "
+      style="color: white; left: 50%; top: 0; transform: translate(-50%, 0)"
+      v-show="data.isGameStart"
+    >
+      <h1 v-if="data.turn">Turn X</h1>
+      <h1 v-if="!data.turn">Turn O</h1>
+    </div>
+    <svg
+      @click="data.isRotateCamera = !data.isRotateCamera"
+      class="
+        absolute
+        opacity-50
+        hover:opacity-100
+        text-white
+        font-bold
+        py-2
+        px-4
+        rounded-full
+        cursor-pointer
+      "
+      style="left: 3px; bottom: 3px; color: white; fill: white"
+      version="1.1"
+      id="Layer_1"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      x="0px"
+      y="0px"
+      width="81px"
+      height="62px"
+      viewBox="0 0 122.879 93.242"
+      enable-background="new 0 0 122.879 93.242"
+      xml:space="preserve"
+    >
+      <g>
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M51.933,0.036h31.521l7.185,12.79h14.794c0.786,0,1.428,0.662,1.428,1.429v35.003 c5.257,1.931,9.185,4.161,11.755,6.539c2.808,2.599,4.234,5.514,4.264,8.602c0.03,3.092-1.35,6.024-4.156,8.649 c-4.786,4.479-14.429,8.444-28.976,10.897c-1.671,0.277-3.223-1.036-3.467-2.935s0.911-3.662,2.582-3.94 c13.403-2.26,22.011-5.655,25.986-9.375c1.301-1.216,1.942-2.312,1.934-3.242c-0.009-0.936-0.684-2.043-2.017-3.276 c-1.765-1.633-4.401-3.2-7.905-4.633v7.618c0,0.766-0.66,1.428-1.428,1.428H19.506c-0.767,0-1.429-0.643-1.429-1.428v-8.5 c-5.576,1.91-9.059,4.052-10.86,6.261c-1.003,1.23-1.261,2.413-0.937,3.497c0.472,1.573,1.877,3.242,3.958,4.875 c7.076,5.552,20.555,9.51,33.239,8.611l-2.744-2.146c-1.311-1.023-1.544-2.917-0.52-4.228c1.024-1.312,2.917-1.544,4.229-0.521 l8.878,6.942c1.311,1.024,1.544,2.917,0.52,4.229c-0.132,0.17-0.279,0.32-0.438,0.454l-9.882,8.837 c-1.239,1.109-3.143,1.003-4.252-0.236c-1.108-1.238-1.003-3.143,0.236-4.251l2.28-2.039C28.4,86.376,14.414,81.996,6.771,76 c-3.146-2.468-5.364-5.305-6.277-8.353c-1.06-3.537-0.466-7.092,2.251-10.425c2.599-3.188,7.505-6.194,15.332-8.696V14.255 c0-0.786,0.642-1.429,1.429-1.429h6.652v-4.59h8.22v4.59h8.928c1.858-3.667,3.715-7.335,5.574-11 C50.01-0.411,49.389,0.036,51.933,0.036L51.933,0.036z M97.607,19.144c2.353,0,4.261,1.909,4.261,4.262s-1.908,4.262-4.261,4.262 s-4.262-1.909-4.262-4.262S95.255,19.144,97.607,19.144L97.607,19.144L97.607,19.144z M66.229,24.113 c7.134,0,12.919,5.785,12.919,12.918s-5.785,12.917-12.919,12.917c-7.135,0-12.92-5.785-12.92-12.917 C53.31,29.898,59.094,24.113,66.229,24.113L66.229,24.113z M66.229,15.696c11.782,0,21.336,9.555,21.336,21.335 s-9.554,21.336-21.336,21.336c-11.781,0-21.335-9.556-21.335-21.336S54.448,15.696,66.229,15.696L66.229,15.696z"
+        />
+      </g>
+    </svg>
     <button
       type="button"
       @click="data.robot = !data.robot"
@@ -77,9 +132,12 @@ export default {
         robot: true,
         isFull: false,
         isGameEnd: false,
+        isGameStart: false,
         gameWinner: "",
         isRotateCamera: true,
         reset: false,
+        cameraControll: false,
+        turn: true,
       },
       data_tris: [
         [1, 1, 1],
@@ -118,9 +176,6 @@ export default {
       let INTERSECTED;
       var objIntersected = [];
 
-      //var logic game
-      let turn = true;
-
       //Pointer for mouse movement
       const pointer = new THREE.Vector2();
       const radius = 100;
@@ -131,7 +186,7 @@ export default {
       var data = this.data;
 
       //var color
-      var color_bg = new THREE.Color("rgb(132, 108, 91)");
+      var color_bg = new THREE.Color("rgb(0, 0, 0)");
       var color_plane = new THREE.Color("rgb(2, 52, 54)");
       var color_separe = new THREE.Color("rgb(17, 17, 17)");
       var color_borderPlane = new THREE.Color("rgb(0, 34, 35)");
@@ -139,7 +194,7 @@ export default {
       var color_o = new THREE.Color("rgb(183, 36, 92)");
       var color_text_front = new THREE.Color("rgb(255, 195, 0)");
       var color_text_side = new THREE.Color("rgb(81, 0, 135)");
-      
+
       //Var Urls
       var urlFonts = "../font1.json";
 
@@ -148,12 +203,6 @@ export default {
 
       function init() {
         //Camera
-        /*  camera = new THREE.PerspectiveCamera(
-          70,
-          window.innerWidth / window.innerHeight,
-          1,
-          10000
-        );*/
         camera = new THREE.PerspectiveCamera(
           30,
           window.innerWidth / window.innerHeight,
@@ -188,8 +237,31 @@ export default {
         // scene.add(lightHelper1, lightHelper2);
         //  scene.add(gridHelper);
 
+        //BG Object Random
+        for (let i = 0; i < 200; i++) {
+          if (i % 2 == 0) {
+            var object = createO(1);
+          } else {
+            var object = createX(1);
+          }
+
+          object.position.x = generateRandom(-10, 10);
+          object.position.y = generateRandom(-10, 10);
+          object.position.z = generateRandom(-10, 10);
+
+          object.rotation.x = Math.random() * 2 * Math.PI;
+          object.rotation.y = Math.random() * 2 * Math.PI;
+          object.rotation.z = Math.random() * 2 * Math.PI;
+
+          const scaleRandom = Math.random() + 0.5;
+          object.scale.x = scaleRandom;
+          object.scale.y = scaleRandom;
+          object.scale.z = scaleRandom;
+
+          scene.add(object);
+        }
+
         //Plane Separe
-        //const separe = new THREE.BoxGeometry(3, 0.1, 0.05);
         const separe = new RoundedBoxGeometry(3.2, 0.15, 0.05, 8, 1);
         const materialSepare = new THREE.MeshLambertMaterial({
           color: color_separe,
@@ -272,17 +344,19 @@ export default {
             object.name = k;
             //Click on plane
             object.on("click", function (ev) {
-              console.log("Click obg " + ev.data.target.name);
-              //Controllo per vedere se si clicca su un obg gia messo
-              if (
-                data_tris[map_tris[ev.data.target.name].charAt(0)][
-                  map_tris[ev.data.target.name].charAt(1)
-                ] == 1 &&
-                !data.isGameEnd &&
-                !data.isFull
-              ) {
-                placeObj(ev.data.target.name);
-                if (data.robot) playRobot();
+              if (data.isGameStart) {
+                console.log("Click obg " + ev.data.target.name);
+                //Controllo per vedere se si clicca su un obg gia messo
+                if (
+                  data_tris[map_tris[ev.data.target.name].charAt(0)][
+                    map_tris[ev.data.target.name].charAt(1)
+                  ] == 1 &&
+                  !data.isGameEnd &&
+                  !data.isFull
+                ) {
+                  placeObj(ev.data.target.name);
+                  if (data.robot) playRobot();
+                }
               }
             });
 
@@ -312,8 +386,10 @@ export default {
 
         //Controls
         controls = new OrbitControls(camera, renderer.domElement);
+        controls.enabled = data.cameraControll;
         controls.enableZoom = true;
         controls.autoRotate = data.isRotateCamera;
+        controls.autoRotateSpeed = 1;
         // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         // controls.dampingFactor = 0.05;
 
@@ -329,6 +405,9 @@ export default {
 
         //Listener Resize Page
         window.addEventListener("resize", onWindowResize);
+
+        //Create Lobby
+        lobby();
       } // Init end
 
       //Resize Page
@@ -349,14 +428,14 @@ export default {
         var position = findPosition(k);
         //Control is empty
         if (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] == 1) {
-          if (turn) {
+          if (data.turn) {
             var obg = createX();
             data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5;
           } else {
             var obg = createO();
             data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3;
           }
-          turn = !turn; //change turn
+          data.turn = !data.turn; //change turn
           //Position obg
           obg.position.y = 0.1;
           obg.position.x = position[0];
@@ -381,10 +460,14 @@ export default {
       }
 
       //Object X
-      function createX() {
+      function createX(x) {
         var altX = 0;
         const geometryX = new THREE.BoxGeometry(0.7, 0.15, 0.08);
-        const materialX = new THREE.MeshPhongMaterial({ color: color_x });
+        if (x != null)
+          var materialX = new THREE.MeshLambertMaterial({
+            color: Math.random() * 0xffffff,
+          });
+        else var materialX = new THREE.MeshPhongMaterial({ color: color_x });
         const obj_X_one = new THREE.Mesh(geometryX, materialX);
         obj_X_one.position.y = altX;
         obj_X_one.position.x = 0;
@@ -403,9 +486,14 @@ export default {
         return groupX;
       }
       //Object O
-      function createO() {
+      function createO(x) {
         var altO = 1;
-        const materialO = new THREE.MeshPhongMaterial({ color: color_o });
+        if (x != null)
+          var materialO = new THREE.MeshLambertMaterial({
+            color: Math.random() * 0xffffff,
+          });
+        else var materialO = new THREE.MeshPhongMaterial({ color: color_o });
+
         var outerRadius = 0.3;
         var innerRadius = 0.2;
         var height = 0.15;
@@ -482,11 +570,13 @@ export default {
 
       //Render Loop
       function render() {
-        //camera.position.x = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-        //  camera.position.y = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-        //camera.position.z = radius * Math.cos(THREE.MathUtils.degToRad(theta));
-        //camera.lookAt(scene.position);
         camera.updateMatrixWorld();
+
+        //initGame
+        if (data.isGameStart) {
+          controls.enabled=true;
+          scene.remove(scene.getObjectByName("textMenu"));
+        }
 
         // Find intersections
         raycaster.setFromCamera(pointer, camera);
@@ -494,7 +584,7 @@ export default {
         //const intersects = raycaster.intersectObjects(scene.children, false);
         const intersects = raycaster.intersectObjects(objIntersected, false);
 
-        if (intersects.length > 0) {
+        if (intersects.length > 0 && data.isGameStart) {
           if (INTERSECTED != intersects[0].object) {
             if (INTERSECTED)
               INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
@@ -788,6 +878,7 @@ export default {
       //View Winner
       function showWinner() {
         data.reset = true;
+        data.isGameStart = false;
         //TEXT VICTORY
         var loaderText = new FontLoader();
         loaderText.load(urlFonts, function (font) {
@@ -810,23 +901,50 @@ export default {
           textVictory.rotation.x = -Math.PI / 2 / 2;
           scene.add(textVictory);
 
-          //Game History view
-          /*
-          var gameHistory_x = createX();
-          gameHistory_x.position.y = 0;
-          gameHistory_x.position.x = 3;
-          gameHistory_x.position.z = 0;
-          //gameHistory_x.rotation.x = Math.PI  / 2;
-          var gameHistory_o = createO();
-          gameHistory_o.position.y = 0;
-          gameHistory_o.position.x = 4;
-          gameHistory_o.position.z = 0;
-          //gameHistory_x.rotation.x = Math.PI  / 2;
-          scene.add(gameHistory_x, gameHistory_o);
-          */
+          //Reposition camera
+          camera.position.z = 10;
+          camera.position.x = 0;
+          camera.position.y = 5;
+          data.isRotateCamera = true;
+          controls.autoRotate = data.isRotateCamera;
+          controls.autoRotateSpeed = 0.3;
         });
       }
-
+      //Random Value
+      function generateRandom(min, max) {
+        var num = Math.floor(Math.random() * (max - min + 1)) + min;
+        return num === -1 || num === 1 || num === 0
+          ? generateRandom(min, max)
+          : num;
+      }
+      //Lobby
+      function lobby() {
+        //Text Menu
+        var loaderText = new FontLoader();
+        loaderText.load(urlFonts, function (font) {
+          const geometry = new TextGeometry("TRIS 3D", {
+            font: font,
+            size: 0.5,
+            height: 0.3,
+          });
+          geometry.computeBoundingBox();
+          console.log(geometry.boundingBox);
+          geometry.center();
+          const materials = [
+            new THREE.MeshPhongMaterial({ color: color_text_front }), // front
+            new THREE.MeshPhongMaterial({ color: color_text_side }), // side
+          ];
+          const textMenu = new THREE.Mesh(geometry, materials);
+          textMenu.castShadow = true;
+          textMenu.position.y = 1.5;
+          textMenu.position.x = 0;
+          textMenu.rotation.x = -Math.PI / 2 / 2;
+          textMenu.name = "textMenu";
+          scene.add(textMenu);
+        });
+        data.turn = Boolean(Math.round(Math.random()));
+        console.log("Inizia "+data.turn)
+      }
       //Other Methods
     },
     reset() {
@@ -841,7 +959,7 @@ export default {
           [1, 1, 1],
           [1, 1, 1],
         ]);
-       this.render();
+      this.render();
     },
   },
   components: {},
