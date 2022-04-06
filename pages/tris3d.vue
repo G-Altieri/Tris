@@ -139,6 +139,10 @@ export default {
       var color_o = new THREE.Color("rgb(183, 36, 92)");
       var color_text_front = new THREE.Color("rgb(255, 195, 0)");
       var color_text_side = new THREE.Color("rgb(81, 0, 135)");
+      
+      //Var Urls
+      var urlFonts = "../font1.json";
+
       init(); //Start
       animate(); //Refresh
 
@@ -786,7 +790,7 @@ export default {
         data.reset = true;
         //TEXT VICTORY
         var loaderText = new FontLoader();
-        loaderText.load("Montserrat_Bold.json", function (font) {
+        loaderText.load(urlFonts, function (font) {
           const geometry = new TextGeometry(data.gameWinner, {
             font: font,
             size: 0.5,
