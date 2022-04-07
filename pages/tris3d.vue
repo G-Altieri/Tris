@@ -1,30 +1,118 @@
 <template>
   <div>
-    <button
-      class="
-        absolute
-        text-center
-        mx-auto
-        text-6xl
-        bg-blue-500
-        hover:bg-blue-700
-        text-white
-        font-bold
-        py-2
-        px-4
-        rounded-full
-      "
+    <!-- Container Menu Game Center -->
+    <div
+      class="absolute text-center mx-auto grid grid-cols-2 gap-4"
       style="
         color: white;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
       "
-      @click="data.isGameStart = true"
-      v-show="!data.isGameStart"
+      v-show="!data.isGameEnd"
     >
-      PLAY
-    </button>
+      <!-- Button Play -->
+      <button
+        class="
+          col-span-2
+          text-center text-6xl
+          bg-green-500
+          hover:bg-green-700
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded-2xl
+        "
+        @click="data.isGameStart = true"
+        v-show="!data.isGameStart"
+      >
+        PLAY
+      </button>
+      <!-- Game Setting -->
+      <!-- Robot vs Player -->
+      <div
+        @click="data.robot = !data.robot"
+        class="
+          hover:bg-blue-700
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded-full
+          cursor-pointer
+        "
+        v-bind:class="[!data.robot ? 'bg-gray-500' : 'bg-blue-500']"
+        style=""
+      >
+        Player vs Robot
+      </div>
+      <!--Player vs Player  -->
+      <div
+        @click="data.robot = !data.robot"
+        class="
+          hover:bg-blue-700
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded-full
+          cursor-pointer
+        "
+        v-bind:class="[data.robot ? 'bg-gray-500' : 'bg-blue-500']"
+        style=""
+      >
+        Player vs Player
+      </div>
+    </div>
+    <!-- Container Menu Pause -->
+    <div
+      class="absolute text-center mx-auto grid grid-cols-2 gap-4"
+      style="
+        color: white;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      "
+      v-show="data.isGamePause && data.isGameEnd"
+    >
+      <!-- Button Restart -->
+      <button
+        class="
+          col-span-2
+          text-center text-6xl
+          bg-green-500
+          hover:bg-green-700
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded-2xl
+        "
+        @click="data.reset = true"
+      >
+        Restart
+      </button>
+      <!-- Button Restart -->
+      <button
+        class="
+          col-span-2
+          text-center text-6xl
+          bg-green-500
+          hover:bg-green-700
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded-2xl
+        "
+        @click="data.isGameMenu = true"
+      >
+        Menu
+      </button>
+    </div>
+
+    <!-- Show Turn Player -->
     <div
       class="
         absolute
@@ -42,6 +130,7 @@
       <h1 v-if="data.turn">Turn X</h1>
       <h1 v-if="!data.turn">Turn O</h1>
     </div>
+    <!-- Camera Rotation On/Off -->
     <svg
       @click="data.isRotateCamera = !data.isRotateCamera"
       class="
@@ -76,41 +165,6 @@
         />
       </g>
     </svg>
-    <button
-      type="button"
-      @click="data.robot = !data.robot"
-      class="
-        absolute
-        bg-blue-500
-        hover:bg-blue-700
-        text-white
-        font-bold
-        py-2
-        px-4
-        rounded-full
-      "
-      style="right: 3px; bottom: 3px"
-    >
-      Robot {{ data.robot }}
-    </button>
-    <button
-      type="button"
-      @click="reset()"
-      class="
-        absolute
-        bg-blue-500
-        hover:bg-blue-700
-        text-white
-        font-bold
-        py-2
-        px-4
-        rounded-full
-      "
-      style="right: 3px; bottom: 3px"
-      v-show="data.reset"
-    >
-      Reset
-    </button>
   </div>
 </template>
 
@@ -133,10 +187,12 @@ export default {
         isFull: false,
         isGameEnd: false,
         isGameStart: false,
+        isGamePause: false,
+        isGameMenu: false,
         gameWinner: "",
         isRotateCamera: true,
         reset: false,
-        cameraControll: false,
+        cameraControll: true,
         turn: true,
       },
       data_tris: [
@@ -345,7 +401,7 @@ export default {
             //Click on plane
             object.on("click", function (ev) {
               if (data.isGameStart) {
-                console.log("Click obg " + ev.data.target.name);
+                console.log("Click " + ev.data.target.name);
                 //Controllo per vedere se si clicca su un obg gia messo
                 if (
                   data_tris[map_tris[ev.data.target.name].charAt(0)][
@@ -390,6 +446,7 @@ export default {
         controls.enableZoom = true;
         controls.autoRotate = data.isRotateCamera;
         controls.autoRotateSpeed = 1;
+        controls.enablePan = false;
         // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         // controls.dampingFactor = 0.05;
 
@@ -430,10 +487,12 @@ export default {
         if (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] == 1) {
           if (data.turn) {
             var obg = createX();
-            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5;
+            (obg.name = "x"),
+              (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 5);
           } else {
             var obg = createO();
-            data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3;
+            (obg.name = "o"),
+              (data_tris[map_tris[k].charAt(0)][map_tris[k].charAt(1)] = 3);
           }
           data.turn = !data.turn; //change turn
           //Position obg
@@ -572,12 +631,20 @@ export default {
       function render() {
         camera.updateMatrixWorld();
 
-        //initGame
+        //StartGame
         if (data.isGameStart) {
-          controls.enabled=true;
+
+          controls.enabled = true;
           scene.remove(scene.getObjectByName("textMenu"));
         }
-
+        //Reset Game
+        if (data.reset) {
+          reset();
+        }
+        //Go menu
+        if (data.isGameMenu) {
+          goMenu();
+        }
         // Find intersections
         raycaster.setFromCamera(pointer, camera);
 
@@ -820,7 +887,6 @@ export default {
               data_tris[2][0] == 5 ||
               data_tris[2][2] == 5
             ) {
-              console.log("XXX");
               placeObj(getPositionTrisMap(1, 1));
               isValuePut = false;
             }
@@ -877,7 +943,7 @@ export default {
       }
       //View Winner
       function showWinner() {
-        data.reset = true;
+        //Set Game End
         data.isGameStart = false;
         //TEXT VICTORY
         var loaderText = new FontLoader();
@@ -888,7 +954,6 @@ export default {
             height: 0.3,
           });
           geometry.computeBoundingBox();
-          console.log(geometry.boundingBox);
           geometry.center();
           const materials = [
             new THREE.MeshPhongMaterial({ color: color_text_front }), // front
@@ -899,6 +964,7 @@ export default {
           textVictory.position.y = 1.5;
           textVictory.position.x = 0;
           textVictory.rotation.x = -Math.PI / 2 / 2;
+          textVictory.name = "textVictory";
           scene.add(textVictory);
 
           //Reposition camera
@@ -909,6 +975,8 @@ export default {
           controls.autoRotate = data.isRotateCamera;
           controls.autoRotateSpeed = 0.3;
         });
+        //Game Pause
+        gamePause();
       }
       //Random Value
       function generateRandom(min, max) {
@@ -928,7 +996,6 @@ export default {
             height: 0.3,
           });
           geometry.computeBoundingBox();
-          console.log(geometry.boundingBox);
           geometry.center();
           const materials = [
             new THREE.MeshPhongMaterial({ color: color_text_front }), // front
@@ -943,23 +1010,73 @@ export default {
           scene.add(textMenu);
         });
         data.turn = Boolean(Math.round(Math.random()));
-        console.log("Inizia "+data.turn)
+      }
+      //Pause Menu
+      function gamePause() {
+        data.isGamePause = true;
+      }
+      //Reset New Game
+      function reset() {
+        //Clear Obg on plane
+
+        for (var i = 0; i < 9; i++) {
+          scene.remove(scene.getObjectByName("x"));
+          scene.remove(scene.getObjectByName("o"));
+        }
+        scene.remove(scene.getObjectByName("textVictory"));
+
+        //Reset Impostazioni
+        for (var i = 0; i < 3; i++) {
+          for (var j = 0; j < 3; j++) {
+            data_tris[i][j] = 1;
+          }
+        }
+
+        data.player = false;
+        data.robot = true;
+        data.isFull = false;
+        data.isGameEnd = false;
+        data.isGameStart = false;
+        data.isGamePause = false;
+        data.isGameMenu = true;
+        data.gameWinner = "";
+        data.isRotateCamera = true;
+        data.reset = false;
+        data.cameraControll = true;
+        data.turn = true;
+      }
+      //Go Menu
+      function goMenu() {
+        //Clear Obg on plane
+        for (var i = 0; i < 9; i++) {
+          scene.remove(scene.getObjectByName("x"));
+          scene.remove(scene.getObjectByName("o"));
+        }
+        scene.remove(scene.getObjectByName("textVictory"));
+
+        lobby();
+
+        //Reset Impostazioni
+        for (var i = 0; i < 3; i++) {
+          for (var j = 0; j < 3; j++) {
+            data_tris[i][j] = 1;
+          }
+        }
+
+        data.player = false;
+        data.robot = true;
+        data.isFull = false;
+        data.isGameEnd = false;
+        data.isGameStart = false;
+        data.isGamePause = false;
+        data.isGameMenu = true;
+        data.gameWinner = "";
+        data.isRotateCamera = true;
+        data.reset = false;
+        data.cameraControll = true;
+        data.turn = true;
       }
       //Other Methods
-    },
-    reset() {
-      (this.data = {
-        isFull: false,
-        isGameEnd: false,
-        gameWinner: "",
-        reset: false,
-      }),
-        (this.data_tris = [
-          [1, 1, 1],
-          [1, 1, 1],
-          [1, 1, 1],
-        ]);
-      this.render();
     },
   },
   components: {},
