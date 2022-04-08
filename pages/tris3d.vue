@@ -230,6 +230,14 @@ export default {
       let container, stats, controls;
       let camera, scene, raycaster, renderer;
 
+      //var animation
+      var mixer;
+      var clock = new THREE.Clock();
+
+      //Var for text
+       var textMenu;
+      var textMenu3D;
+
       let INTERSECTED;
       var objIntersected = [];
 
@@ -413,9 +421,9 @@ export default {
                 ) {
                   placeObj(ev.data.target.name);
                   if (data.robot)
-                   // setTimeout(() => {
-                      playRobot();
-                    //}, 500);
+                    // setTimeout(() => {
+                    playRobot();
+                  //}, 500);
                 }
               }
             });
@@ -637,7 +645,8 @@ export default {
 
         //StartGame
         if (data.isGameStart) {
-          scene.remove(scene.getObjectByName("textMenu"));
+          scene.remove(scene.getObjectByName("textMenuTRIS"));
+          scene.remove(scene.getObjectByName("textMenu3D"));
           data.showGameMenu = false;
         }
         //Reset Game
@@ -656,6 +665,12 @@ export default {
           var obj = scene.getObjectByName("textVictory");
           //obj.rotation.x = Math.PI / 2;
         }
+
+        //Animation
+        if (scene.getObjectByName("textMenu3D") != null) rotateCube();
+
+        // var delta = clock.getDelta();
+        // if (mixer) mixer.update(delta);
 
         // Find intersections
         raycaster.setFromCamera(pointer, camera);
@@ -999,7 +1014,7 @@ export default {
         //Text Menu
         var loaderText = new FontLoader();
         loaderText.load(urlFonts, function (font) {
-          const geometry = new TextGeometry("TRIS 3D", {
+          const geometry = new TextGeometry("TRIS", {
             font: font,
             size: 0.5,
             height: 0.3,
@@ -1010,15 +1025,52 @@ export default {
             new THREE.MeshPhongMaterial({ color: color_text_front }), // front
             new THREE.MeshPhongMaterial({ color: color_text_side }), // side
           ];
-          const textMenu = new THREE.Mesh(geometry, materials);
+          textMenu = new THREE.Mesh(geometry, materials);
           textMenu.castShadow = true;
           textMenu.position.y = 1.5;
-          textMenu.position.x = 0;
+          textMenu.position.x = -0.5;
           textMenu.rotation.x = -Math.PI / 2 / 2;
-          textMenu.name = "textMenu";
+          textMenu.name = "textMenuTRIS";
           scene.add(textMenu);
+
+          //mixer = new THREE.AnimationMixer(textMenu);
+          //let animation = THREE.AnimationClip(100,"y");
+          //let animation2 = new THREE.get({loop:true}).to({opacity:1},500).wait("1500").to({opacity:0},500)
+          //mixer.clipAction(animation2).play();
+          //console.log(mixer);
+        });
+        var loaderText = new FontLoader();
+
+        loaderText.load(urlFonts, function (font) {
+          const geometry = new TextGeometry("3D", {
+            font: font,
+            size: 0.5,
+            height: 0.3,
+          });
+          geometry.computeBoundingBox();
+          geometry.center();
+          const materials = [
+            new THREE.MeshPhongMaterial({ color: color_text_front }), // front
+            new THREE.MeshPhongMaterial({ color: color_text_side }), // side
+          ];
+          textMenu3D = new THREE.Mesh(geometry, materials);
+          textMenu3D.castShadow = true;
+          textMenu3D.position.y = 1.5;
+          textMenu3D.position.x = 0.9;
+          textMenu3D.rotation.x = -Math.PI / 2 / 2;
+          textMenu3D.name = "textMenu3D";
+          scene.add(textMenu3D);
         });
         data.turn = Boolean(Math.round(Math.random()));
+      }
+
+      function rotateCube() {
+        var SPEED = 0.01;
+        //if (textMenu3D.rotation.y > -0.9) textMenu3D.rotation.y -= SPEED;
+       // else
+         textMenu3D.rotation.x += SPEED;
+        //textMenu3D.rotation.y -= SPEED;
+        //textMenu3D.rotation.z -= SPEED *0.2;
       }
       //Restart New Game
       function restartGame() {
