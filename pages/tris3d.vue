@@ -6,10 +6,10 @@
       style="
         color: white;
         left: 50%;
-        top: 50%;
+        top: 80%;
         transform: translate(-50%, -50%);
       "
-      v-show="!data.isGameEnd"
+      v-show="data.showGameMenu"
     >
       <!-- Button Play -->
       <button
@@ -25,7 +25,6 @@
           rounded-2xl
         "
         @click="data.isGameStart = true"
-        v-show="!data.isGameStart"
       >
         PLAY
       </button>
@@ -71,10 +70,10 @@
       style="
         color: white;
         left: 50%;
-        top: 50%;
+        top: 80%;
         transform: translate(-50%, -50%);
       "
-      v-show="data.isGamePause && data.isGameEnd"
+      v-show="data.showPause"
     >
       <!-- Button Restart -->
       <button
@@ -89,46 +88,45 @@
           px-4
           rounded-2xl
         "
-        @click="data.reset = true"
+        @click="data.btnResetPlay = true"
       >
         Restart
       </button>
-      <!-- Button Restart -->
+      <!-- Button Menu -->
       <button
         class="
           col-span-2
           text-center text-6xl
-          bg-green-500
-          hover:bg-green-700
+          bg-blue-500
+          hover:bg-blue-700
           text-white
           font-bold
           py-2
           px-4
           rounded-2xl
         "
-        @click="data.isGameMenu = true"
+        @click="data.btnshowMenu = true"
       >
         Menu
       </button>
     </div>
-
     <!-- Show Turn Player -->
     <div
       class="
         absolute
         text-center
         mx-auto
-        text-6xl text-white
+        text-6xl
         font-bold
         py-2
         px-4
         rounded-full
       "
-      style="color: white; left: 50%; top: 0; transform: translate(-50%, 0)"
+      style="left: 50%; top: 0; transform: translate(-50%, 0)"
       v-show="data.isGameStart"
     >
-      <h1 v-if="data.turn">Turn X</h1>
-      <h1 v-if="!data.turn">Turn O</h1>
+      <h1 v-if="data.turn" style="color: yellow">Turn X</h1>
+      <h1 v-if="!data.turn" style="color: rgb(255, 48, 127)">Turn O</h1>
     </div>
     <!-- Camera Rotation On/Off -->
     <svg
@@ -185,15 +183,18 @@ export default {
         player: false,
         robot: true,
         isFull: false,
-        isGameEnd: false,
-        isGameStart: false,
-        isGamePause: false,
-        isGameMenu: false,
         gameWinner: "",
         isRotateCamera: true,
-        reset: false,
         cameraControll: true,
         turn: true,
+        isGameEnd: false,
+        isGameStart: false,
+
+        showGameMenu: true,
+        showPause: false,
+        btnshowMenu: false,
+        btnResetPlay: false,
+        reset: false,
       },
       data_tris: [
         [1, 1, 1],
@@ -411,7 +412,10 @@ export default {
                   !data.isFull
                 ) {
                   placeObj(ev.data.target.name);
-                  if (data.robot) playRobot();
+                  if (data.robot)
+                   // setTimeout(() => {
+                      playRobot();
+                    //}, 500);
                 }
               }
             });
@@ -633,18 +637,26 @@ export default {
 
         //StartGame
         if (data.isGameStart) {
-
-          controls.enabled = true;
           scene.remove(scene.getObjectByName("textMenu"));
+          data.showGameMenu = false;
         }
         //Reset Game
-        if (data.reset) {
-          reset();
+        if (data.btnResetPlay) {
+          restartGame();
+          data.btnResetPlay = false;
         }
         //Go menu
-        if (data.isGameMenu) {
+        if (data.btnshowMenu) {
           goMenu();
+          data.btnshowMenu = false;
         }
+
+        //Animation Text Game End
+        if (data.isGameEnd) {
+          var obj = scene.getObjectByName("textVictory");
+          //obj.rotation.x = Math.PI / 2;
+        }
+
         // Find intersections
         raycaster.setFromCamera(pointer, camera);
 
@@ -725,18 +737,15 @@ export default {
         if (data.gameWinner == "") {
           if (data.isFull) {
             data.gameWinner = "Parity";
-            data.isGameEnd = true;
-            showWinner();
+            endGame();
           }
         } else {
-          data.isGameEnd = true;
-          showWinner();
+          endGame();
         }
       }
       //Method for AI Robot
       function playRobot() {
         console.log("Gioca il robot");
-
         var random = true;
         var isValuePut = true;
 
@@ -942,9 +951,11 @@ export default {
         }
       }
       //View Winner
-      function showWinner() {
+      function endGame() {
         //Set Game End
         data.isGameStart = false;
+        data.isGameEnd = true;
+        data.showPause = true;
         //TEXT VICTORY
         var loaderText = new FontLoader();
         loaderText.load(urlFonts, function (font) {
@@ -975,8 +986,6 @@ export default {
           controls.autoRotate = data.isRotateCamera;
           controls.autoRotateSpeed = 0.3;
         });
-        //Game Pause
-        gamePause();
       }
       //Random Value
       function generateRandom(min, max) {
@@ -1011,14 +1020,9 @@ export default {
         });
         data.turn = Boolean(Math.round(Math.random()));
       }
-      //Pause Menu
-      function gamePause() {
-        data.isGamePause = true;
-      }
-      //Reset New Game
-      function reset() {
+      //Restart New Game
+      function restartGame() {
         //Clear Obg on plane
-
         for (var i = 0; i < 9; i++) {
           scene.remove(scene.getObjectByName("x"));
           scene.remove(scene.getObjectByName("o"));
@@ -1033,17 +1037,19 @@ export default {
         }
 
         data.player = false;
-        data.robot = true;
+        //data.robot = data.robot;
         data.isFull = false;
         data.isGameEnd = false;
-        data.isGameStart = false;
-        data.isGamePause = false;
-        data.isGameMenu = true;
+        data.isGameStart = true;
         data.gameWinner = "";
         data.isRotateCamera = true;
         data.reset = false;
         data.cameraControll = true;
         data.turn = true;
+        data.showGameMenu = false;
+        data.showPause = false;
+        data.btnshowMenu = false;
+        data.btnResetPlay = false;
       }
       //Go Menu
       function goMenu() {
@@ -1064,17 +1070,19 @@ export default {
         }
 
         data.player = false;
-        data.robot = true;
+        //data.robot = data.robot;
         data.isFull = false;
         data.isGameEnd = false;
         data.isGameStart = false;
-        data.isGamePause = false;
-        data.isGameMenu = true;
         data.gameWinner = "";
         data.isRotateCamera = true;
         data.reset = false;
         data.cameraControll = true;
         data.turn = true;
+        data.showGameMenu = true;
+        data.showPause = false;
+        data.btnshowMenu = false;
+        data.btnResetPlay = false;
       }
       //Other Methods
     },
