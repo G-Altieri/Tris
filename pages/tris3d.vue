@@ -233,9 +233,10 @@ export default {
       //var animation
       var mixer;
       var clock = new THREE.Clock();
+      var anim_x_o = [];
 
       //Var for text
-       var textMenu;
+      var textMenu;
       var textMenu3D;
 
       let INTERSECTED;
@@ -310,9 +311,14 @@ export default {
             var object = createX(1);
           }
 
-          object.position.x = generateRandom(-10, 10);
+          do {
+            var random_x = generateRandom(-10, 10);
+            var random_z = generateRandom(-10, 10);
+            var abs = Math.abs(random_x) + Math.abs(random_z);
+          } while (abs == 2 || abs == 0 || abs == 1 || abs == 3);
+          object.position.x = random_x;
+          object.position.z = random_z;
           object.position.y = generateRandom(-10, 10);
-          object.position.z = generateRandom(-10, 10);
 
           object.rotation.x = Math.random() * 2 * Math.PI;
           object.rotation.y = Math.random() * 2 * Math.PI;
@@ -459,6 +465,8 @@ export default {
         controls.autoRotate = data.isRotateCamera;
         controls.autoRotateSpeed = 1;
         controls.enablePan = false;
+        controls.maxDistance =50;
+        controls.minDistance =2;
         // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         // controls.dampingFactor = 0.05;
 
@@ -508,9 +516,11 @@ export default {
           }
           data.turn = !data.turn; //change turn
           //Position obg
-          obg.position.y = 0.1;
+          //obg.position.y = 0.1;
+          obg.position.y = 0.3;
           obg.position.x = position[0];
           obg.position.z = position[1];
+          anim_x_o.push(obg);
           scene.add(obg);
         }
         // this.controll(); //controll winner
@@ -662,13 +672,14 @@ export default {
 
         //Animation Text Game End
         if (data.isGameEnd) {
-          var obj = scene.getObjectByName("textVictory");
-          //obj.rotation.x = Math.PI / 2;
+        //  var obj = scene.getObjectByName("textVictory");
+        //  if (obj.rotation.x < 5.8) obj.rotation.x += 0.07;
         }
 
         //Animation
         if (scene.getObjectByName("textMenu3D") != null) rotateCube();
-
+        //X and O
+        Func_anim_x_o();
         // var delta = clock.getDelta();
         // if (mixer) mixer.update(delta);
 
@@ -1005,9 +1016,11 @@ export default {
       //Random Value
       function generateRandom(min, max) {
         var num = Math.floor(Math.random() * (max - min + 1)) + min;
-        return num === -1 || num === 1 || num === 0
+        return num;
+        /* return num === -1 || num === 1 || num === 0
           ? generateRandom(min, max)
           : num;
+          */
       }
       //Lobby
       function lobby() {
@@ -1067,8 +1080,8 @@ export default {
       function rotateCube() {
         var SPEED = 0.01;
         //if (textMenu3D.rotation.y > -0.9) textMenu3D.rotation.y -= SPEED;
-       // else
-         textMenu3D.rotation.x += SPEED;
+        // else
+        textMenu3D.rotation.x += SPEED;
         //textMenu3D.rotation.y -= SPEED;
         //textMenu3D.rotation.z -= SPEED *0.2;
       }
@@ -1135,6 +1148,16 @@ export default {
         data.showPause = false;
         data.btnshowMenu = false;
         data.btnResetPlay = false;
+      }
+      //Animation X and O
+      function Func_anim_x_o() {
+        if (!anim_x_o.length == 0) {
+          for (var i = 0; i < anim_x_o.length; i++) {
+            if (anim_x_o[i].position.y >= 0.12) {
+              anim_x_o[i].position.y = anim_x_o[i].position.y - 0.01;
+            }
+          }
+        }
       }
       //Other Methods
     },
