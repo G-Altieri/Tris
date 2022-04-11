@@ -15,7 +15,7 @@
       <button
         class="
           col-span-2
-          text-center text-6xl
+          text-center
           bg-green-500
           hover:bg-green-700
           text-white
@@ -23,6 +23,9 @@
           py-2
           px-4
           rounded-2xl
+          text-2xl
+          md:text-3xl
+          lg:text-5xl
         "
         @click="data.isGameStart = true"
       >
@@ -40,6 +43,9 @@
           px-4
           rounded-full
           cursor-pointer
+          text-lg
+          md:text-xl
+          lg:text-3xl
         "
         v-bind:class="[!data.robot ? 'bg-gray-500' : 'bg-blue-500']"
         style=""
@@ -57,6 +63,9 @@
           px-4
           rounded-full
           cursor-pointer
+          text-lg
+          md:text-xl
+          lg:text-3xl
         "
         v-bind:class="[data.robot ? 'bg-gray-500' : 'bg-blue-500']"
         style=""
@@ -66,7 +75,16 @@
     </div>
     <!-- Container Menu Pause -->
     <div
-      class="absolute text-center mx-auto grid grid-cols-2 gap-4"
+      class="
+        absolute
+        text-center
+        mx-auto
+        grid grid-cols-2
+        gap-4
+        text-xl
+        md:text-3xl
+        lg:text-5xl
+      "
       style="
         color: white;
         left: 50%;
@@ -79,7 +97,7 @@
       <button
         class="
           col-span-2
-          text-center text-6xl
+          text-center
           bg-green-500
           hover:bg-green-700
           text-white
@@ -87,6 +105,9 @@
           py-2
           px-4
           rounded-2xl
+          text-2xl
+          md:text-3xl
+          lg:text-5xl
         "
         @click="data.btnResetPlay = true"
       >
@@ -96,7 +117,7 @@
       <button
         class="
           col-span-2
-          text-center text-6xl
+          text-center
           bg-blue-500
           hover:bg-blue-700
           text-white
@@ -104,6 +125,9 @@
           py-2
           px-4
           rounded-2xl
+          text-2xl
+          md:text-3xl
+          lg:text-5xl
         "
         @click="data.btnshowMenu = true"
       >
@@ -116,11 +140,13 @@
         absolute
         text-center
         mx-auto
-        text-6xl
         font-bold
         py-2
         px-4
         rounded-full
+        text-2xl
+        md:text-3xl
+        lg:text-5xl
       "
       style="left: 50%; top: 0; transform: translate(-50%, 0)"
       v-show="data.isGameStart"
@@ -426,7 +452,7 @@ export default {
                   !data.isFull
                 ) {
                   placeObj(ev.data.target.name);
-                  if (data.robot)
+                  if (data.robot && !data.isGameEnd)
                     // setTimeout(() => {
                     playRobot();
                   //}, 500);
@@ -465,8 +491,8 @@ export default {
         controls.autoRotate = data.isRotateCamera;
         controls.autoRotateSpeed = 1;
         controls.enablePan = false;
-        controls.maxDistance =50;
-        controls.minDistance =2;
+        controls.maxDistance = 50;
+        controls.minDistance = 2;
         // controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         // controls.dampingFactor = 0.05;
 
@@ -672,8 +698,8 @@ export default {
 
         //Animation Text Game End
         if (data.isGameEnd) {
-        //  var obj = scene.getObjectByName("textVictory");
-        //  if (obj.rotation.x < 5.8) obj.rotation.x += 0.07;
+          //  var obj = scene.getObjectByName("textVictory");
+          //  if (obj.rotation.x < 5.8) obj.rotation.x += 0.07;
         }
 
         //Animation
